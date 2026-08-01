@@ -10,6 +10,33 @@ describe("match API", () => {
     await Promise.all(apps.splice(0).map((app) => app.close()));
   });
 
+  it("creates a match with trimmed player names and an initial scoring state", async () => {
+    // Arrange
+    const app = await buildApp();
+    apps.push(app);
+
+    // Act
+    const response = await app.inject({
+      method: "POST",
+      url: "/matches",
+      payload: { homePlayer: " Aino ", awayPlayer: "Kai " },
+    });
+
+    // Assert
+    expect(response.statusCode).toBe(201);
+    expect(response.json()).toEqual({
+      id: expect.any(String),
+      homePlayer: "Aino",
+      awayPlayer: "Kai",
+      initialServer: "home",
+      servingSide: "home",
+      games: [{ home: 0, away: 0 }],
+      pointHistory: [],
+      status: "in_progress",
+      winner: null,
+    });
+  });
+
   it("returns serving side and point history after recording a point", async () => {
     // Arrange
     const app = await buildApp();
