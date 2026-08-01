@@ -9,6 +9,7 @@ import {
   recordRally,
   undoRally,
 } from "./scoring.js";
+import type { Side } from "./types.js";
 
 describe("badminton scoring", () => {
   it("requires a two-point lead after 20-all", () => {
@@ -136,6 +137,51 @@ describe("badminton scoring", () => {
 
     // Assert
     expect(revertedState).toEqual(initialState);
+  });
+
+  it("undoes a game-winning rally and restores the completed game's prior score", () => {
+    // Arrange
+    const gamePointRallies = [
+      ...Array<Side>(20).fill("home"),
+      ...Array<Side>(15).fill("away"),
+      "home" as const,
+    ];
+    const completedGame = gamePointRallies.reduce(
+      recordRally,
+      createScoringState("home"),
+    );
+
+    // Act
+    const revertedState = undoRally(completedGame);
+
+    // Assert
+    expect(revertedState.games).toEqual([{ home: 20, away: 15 }]);
+    expect(revertedState.servingSide).toBe("away");
+    expect(revertedState.pointHistory).toHaveLength(35);
+  });
+
+  it("undoes a match-winning rally and restores an in-progress final game", () => {
+    // Arrange
+    const gameWinningRallies = [
+      ...Array<Side>(20).fill("home"),
+      ...Array<Side>(15).fill("away"),
+      "home" as const,
+    ];
+    const completedMatch = [
+      ...gameWinningRallies,
+      ...gameWinningRallies,
+    ].reduce(recordRally, createScoringState("home"));
+
+    // Act
+    const revertedState = undoRally(completedMatch);
+
+    // Assert
+    expect(revertedState.games).toEqual([
+      { home: 21, away: 15 },
+      { home: 20, away: 15 },
+    ]);
+    expect(matchWinner(revertedState.games)).toBeNull();
+    expect(revertedState.servingSide).toBe("away");
   });
 
   it("rejects undo when no rallies have been recorded", () => {
