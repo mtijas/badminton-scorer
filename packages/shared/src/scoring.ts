@@ -14,7 +14,7 @@ export function gameWinner(score: GameScore): Side | null {
   return leaderPoints - trailingPoints >= 2 ? leader : null;
 }
 
-export function matchWinner(games: GameScore[]): Side | null {
+export function matchWinner(games: readonly GameScore[]): Side | null {
   const won = { home: 0, away: 0 };
   for (const game of games) {
     const winner = gameWinner(game);
@@ -25,7 +25,7 @@ export function matchWinner(games: GameScore[]): Side | null {
   return null;
 }
 
-export function recordPoint(games: GameScore[], side: Side): GameScore[] {
+export function recordPoint(games: readonly GameScore[], side: Side): GameScore[] {
   const winner = matchWinner(games);
   if (winner) throw new Error("A completed match cannot receive more points.");
 
@@ -62,6 +62,6 @@ export function undoRally(state: ScoringState): ScoringState {
   return replayRallies(state.initialServer, state.pointHistory.slice(0, -1));
 }
 
-function replayRallies(initialServer: Side, pointHistory: Side[]): ScoringState {
+function replayRallies(initialServer: Side, pointHistory: readonly Side[]): ScoringState {
   return pointHistory.reduce(recordRally, createScoringState(initialServer));
 }

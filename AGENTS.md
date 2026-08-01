@@ -82,7 +82,7 @@ The scoring domain must not depend on UI or persistence.
 - Hooks: useCamelCase
 - Functions and variables: camelCase
 - Constants: descriptive names; avoid unexplained literals
-- Test files: *.test.ts or *.test.tsx
+- Test files: `*.test.ts` or `*.test.tsx`
 
 ## Files
 
