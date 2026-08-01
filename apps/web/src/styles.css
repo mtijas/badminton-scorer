@@ -1,5 +1,62 @@
-:root { font-family: system-ui, sans-serif; color: #102a43; background: #f0f4f8; }
-body { margin: 0; }
-main { max-width: 48rem; margin: 5rem auto; padding: 2rem; background: white; border-radius: 1rem; box-shadow: 0 1rem 3rem #102a4320; }
-.setup { display: grid; gap: 1rem; } label { display: grid; gap: .4rem; font-weight: 600; } input, button { font: inherit; padding: .7rem 1rem; border-radius: .4rem; } input { border: 1px solid #9fb3c8; } button { border: 0; background: #007c91; color: white; cursor: pointer; } button:disabled { opacity: .5; cursor: not-allowed; }
-.scoreboard { text-align: center; } section { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; } article { padding: 1.5rem; border: 1px solid #d9e2ec; border-radius: .75rem; } strong { display: block; font-size: 5rem; margin: 1rem 0; }
+:root {
+  font-family: system-ui, sans-serif;
+  color: #102a43;
+  background: #f0f4f8;
+}
+body {
+  margin: 0;
+}
+main {
+  max-width: 48rem;
+  margin: 5rem auto;
+  padding: 2rem;
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 1rem 3rem #102a4320;
+}
+.setup {
+  display: grid;
+  gap: 1rem;
+}
+label {
+  display: grid;
+  gap: 0.4rem;
+  font-weight: 600;
+}
+input,
+button {
+  font: inherit;
+  padding: 0.7rem 1rem;
+  border-radius: 0.4rem;
+}
+input {
+  border: 1px solid #9fb3c8;
+}
+button {
+  border: 0;
+  background: #007c91;
+  color: white;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.scoreboard {
+  text-align: center;
+}
+section {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+article {
+  padding: 1.5rem;
+  border: 1px solid #d9e2ec;
+  border-radius: 0.75rem;
+}
+strong {
+  display: block;
+  font-size: 5rem;
+  margin: 1rem 0;
+}

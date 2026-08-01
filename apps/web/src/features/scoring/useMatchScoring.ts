@@ -13,7 +13,10 @@ export function useMatchScoring(): MatchScoringController {
   const [match, setMatch] = useState<MatchState | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function startMatch(homePlayer: string, awayPlayer: string): Promise<void> {
+  async function startMatch(
+    homePlayer: string,
+    awayPlayer: string,
+  ): Promise<void> {
     try {
       setError(null);
       setMatch(await createMatch(homePlayer, awayPlayer));

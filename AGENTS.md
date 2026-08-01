@@ -30,7 +30,7 @@ After changing code, run:
 pnpm check
 ```
 
-`pnpm check` is the required completion gate. It runs type checking, linting, tests, and builds; it must pass before the task is considered complete.
+`pnpm check` is the required completion gate. It validates formatting, type checking, linting, tests, and builds; it must pass before the task is considered complete.
 
 ## Commands
 
@@ -70,7 +70,7 @@ Document the canonical development, test, lint, and Docker commands in `README.m
 Dependencies should flow in this direction:
 
 UI → application services → scoring domain
-                          → persistence
+→ persistence
 
 The scoring domain must not depend on UI or persistence.
 

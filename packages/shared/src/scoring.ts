@@ -25,13 +25,19 @@ export function matchWinner(games: readonly GameScore[]): Side | null {
   return null;
 }
 
-export function recordPoint(games: readonly GameScore[], side: Side): GameScore[] {
+export function recordPoint(
+  games: readonly GameScore[],
+  side: Side,
+): GameScore[] {
   const winner = matchWinner(games);
   if (winner) throw new Error("A completed match cannot receive more points.");
 
   const current = games.at(-1) ?? { home: 0, away: 0 };
   if (gameWinner(current)) {
-    return [...games, { home: side === "home" ? 1 : 0, away: side === "away" ? 1 : 0 }];
+    return [
+      ...games,
+      { home: side === "home" ? 1 : 0, away: side === "away" ? 1 : 0 },
+    ];
   }
   return [...games.slice(0, -1), { ...current, [side]: current[side] + 1 }];
 }
@@ -41,16 +47,19 @@ export function createScoringState(initialServer: Side): ScoringState {
     initialServer,
     servingSide: initialServer,
     games: [{ home: 0, away: 0 }],
-    pointHistory: []
+    pointHistory: [],
   };
 }
 
-export function recordRally(state: ScoringState, rallyWinner: Side): ScoringState {
+export function recordRally(
+  state: ScoringState,
+  rallyWinner: Side,
+): ScoringState {
   return {
     initialServer: state.initialServer,
     servingSide: rallyWinner,
     games: recordPoint(state.games, rallyWinner),
-    pointHistory: [...state.pointHistory, rallyWinner]
+    pointHistory: [...state.pointHistory, rallyWinner],
   };
 }
 
@@ -62,6 +71,9 @@ export function undoRally(state: ScoringState): ScoringState {
   return replayRallies(state.initialServer, state.pointHistory.slice(0, -1));
 }
 
-function replayRallies(initialServer: Side, pointHistory: readonly Side[]): ScoringState {
+function replayRallies(
+  initialServer: Side,
+  pointHistory: readonly Side[],
+): ScoringState {
   return pointHistory.reduce(recordRally, createScoringState(initialServer));
 }

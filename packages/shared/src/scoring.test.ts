@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { createScoringState, gameWinner, matchWinner, recordPoint, recordRally, undoRally } from "./scoring.js";
+import {
+  createScoringState,
+  gameWinner,
+  matchWinner,
+  recordPoint,
+  recordRally,
+  undoRally,
+} from "./scoring.js";
 
 describe("badminton scoring", () => {
   it("requires a two-point lead after 20-all", () => {
@@ -37,13 +44,17 @@ describe("badminton scoring", () => {
     // Assert
     expect(games).toEqual([
       { home: 21, away: 15 },
-      { home: 0, away: 1 }
+      { home: 0, away: 1 },
     ]);
   });
 
   it("declares a best-of-three match winner", () => {
     // Arrange
-    const games = [{ home: 21, away: 18 }, { home: 15, away: 21 }, { home: 21, away: 19 }];
+    const games = [
+      { home: 21, away: 18 },
+      { home: 15, away: 21 },
+      { home: 21, away: 19 },
+    ];
 
     // Act
     const winner = matchWinner(games);
@@ -54,14 +65,17 @@ describe("badminton scoring", () => {
 
   it("rejects points after match completion", () => {
     // Arrange
-    const completedMatch = [{ home: 21, away: 18 }, { home: 21, away: 16 }];
+    const completedMatch = [
+      { home: 21, away: 18 },
+      { home: 21, away: 16 },
+    ];
 
     // Act
     const recordCompletedMatchPoint = () => recordPoint(completedMatch, "away");
 
     // Assert
     expect(recordCompletedMatchPoint).toThrow(
-      "A completed match cannot receive more points."
+      "A completed match cannot receive more points.",
     );
   });
 

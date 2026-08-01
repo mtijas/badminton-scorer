@@ -32,7 +32,8 @@ The web client runs at `http://localhost:5173` and the API at `http://localhost:
 
 ```sh
 pnpm dev     # start API and web client together
-pnpm check   # required completion gate: typecheck, lint, test, and build
+pnpm check   # required completion gate: format, typecheck, lint, test, and build
+pnpm format  # format project files with Prettier
 pnpm typecheck # type-check all workspaces without generating output
 pnpm build   # type-check and build deployable apps
 pnpm test    # run shared scoring-rule tests

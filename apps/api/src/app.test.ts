@@ -17,7 +17,7 @@ describe("match API", () => {
     const createResponse = await app.inject({
       method: "POST",
       url: "/matches",
-      payload: { homePlayer: "Aino", awayPlayer: "Kai" }
+      payload: { homePlayer: "Aino", awayPlayer: "Kai" },
     });
     const match = createResponse.json<MatchState>();
 
@@ -25,7 +25,7 @@ describe("match API", () => {
     const pointResponse = await app.inject({
       method: "POST",
       url: `/matches/${match.id}/points`,
-      payload: { side: "away" }
+      payload: { side: "away" },
     });
     const updatedMatch = pointResponse.json<MatchState>();
 
