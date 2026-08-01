@@ -3,6 +3,11 @@ import type { FastifyInstance } from "fastify";
 import type { MatchState } from "@badminton-scorer/shared";
 import { buildApp } from "./app.js";
 
+const whitespaceOnlyNameCases = [
+  { player: "home", homePlayer: " \t ", awayPlayer: "Kai" },
+  { player: "away", homePlayer: "Aino", awayPlayer: "\n " },
+] as const;
+
 describe("match API", () => {
   const apps: FastifyInstance[] = [];
 
@@ -64,23 +69,42 @@ describe("match API", () => {
     expect(updatedMatch.pointHistory).toEqual(["away"]);
   });
 
-  it("rejects empty or whitespace-only player names", async () => {
+  it.each(whitespaceOnlyNameCases)(
+    "rejects a whitespace-only $player player name",
+    async ({ homePlayer, awayPlayer }) => {
+      // Arrange
+      const app = await buildApp();
+      apps.push(app);
+
+      // Act
+      const response = await app.inject({
+        method: "POST",
+        url: "/matches",
+        payload: { homePlayer, awayPlayer },
+      });
+
+      // Assert
+      expect(response.statusCode).toBe(400);
+      expect(response.json()).toEqual({
+        error: "Both player names are required.",
+      });
+    },
+  );
+
+  it("returns not found for an unknown match ID", async () => {
     // Arrange
     const app = await buildApp();
     apps.push(app);
 
     // Act
     const response = await app.inject({
-      method: "POST",
-      url: "/matches",
-      payload: { homePlayer: "   ", awayPlayer: "Kai" },
+      method: "GET",
+      url: "/matches/does-not-exist",
     });
 
     // Assert
-    expect(response.statusCode).toBe(400);
-    expect(response.json()).toEqual({
-      error: "Both player names are required.",
-    });
+    expect(response.statusCode).toBe(404);
+    expect(response.json()).toEqual({ error: "Match not found." });
   });
 
   it("undoes the latest point and restores the previous scoring state", async () => {
