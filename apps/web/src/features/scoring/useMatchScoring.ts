@@ -9,6 +9,7 @@ export interface MatchScoringController {
   startMatch(homePlayer: string, awayPlayer: string): Promise<void>;
   addPoint(side: Side): Promise<void>;
   undoLastPoint(): Promise<void>;
+  newMatch(): void;
 }
 
 export function useMatchScoring(): MatchScoringController {
@@ -39,6 +40,11 @@ export function useMatchScoring(): MatchScoringController {
     await updateScore(() => undoPoint(match.id));
   }
 
+  function newMatch(): void {
+    setError(null);
+    setMatch(null);
+  }
+
   async function updateScore(
     operation: () => Promise<MatchState>,
   ): Promise<void> {
@@ -64,6 +70,7 @@ export function useMatchScoring(): MatchScoringController {
     startMatch,
     addPoint,
     undoLastPoint,
+    newMatch,
   };
 }
 

@@ -146,6 +146,33 @@ describe("match scoring workflow", () => {
     expect(screen.getByText("Game 1: 21–18")).toBeTruthy();
   });
 
+  it("returns to match setup when starting a new match after completion", async () => {
+    // Arrange
+    const completedMatch: MatchState = {
+      ...startingMatch,
+      games: [
+        { home: 21, away: 18 },
+        { home: 21, away: 16 },
+      ],
+      pointHistory: ["home"],
+      status: "complete",
+      winner: "home",
+    };
+    vi.mocked(createMatch).mockResolvedValue(completedMatch);
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: "Start match" }));
+    await screen.findByRole("button", { name: "New match" });
+
+    // Act
+    fireEvent.click(screen.getByRole("button", { name: "New match" }));
+
+    // Assert
+    expect(
+      screen.getByRole("heading", { name: "Badminton Scorer" }),
+    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Start match" })).toBeTruthy();
+  });
+
   it("undoes the latest point from the visible scoring controls", async () => {
     // Arrange
     const matchAfterPoint: MatchState = {

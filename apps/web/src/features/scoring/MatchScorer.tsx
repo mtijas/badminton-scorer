@@ -10,8 +10,15 @@ import { MatchSetup } from "../matches/MatchSetup.js";
 import { useMatchScoring } from "./useMatchScoring.js";
 
 export function MatchScorer(): ReactElement {
-  const { match, error, isUpdatingScore, startMatch, addPoint, undoLastPoint } =
-    useMatchScoring();
+  const {
+    match,
+    error,
+    isUpdatingScore,
+    startMatch,
+    addPoint,
+    undoLastPoint,
+    newMatch,
+  } = useMatchScoring();
 
   if (!match) return <MatchSetup error={error} onStart={startMatch} />;
   return (
@@ -21,6 +28,7 @@ export function MatchScorer(): ReactElement {
       onAddPoint={addPoint}
       onUndoLastPoint={undoLastPoint}
       isUpdatingScore={isUpdatingScore}
+      onNewMatch={newMatch}
     />
   );
 }
@@ -31,6 +39,7 @@ interface LiveMatchProps {
   readonly onAddPoint: (side: Side) => Promise<void>;
   readonly onUndoLastPoint: () => Promise<void>;
   readonly isUpdatingScore: boolean;
+  readonly onNewMatch: () => void;
 }
 
 function LiveMatch({
@@ -39,6 +48,7 @@ function LiveMatch({
   onAddPoint,
   onUndoLastPoint,
   isUpdatingScore,
+  onNewMatch,
 }: LiveMatchProps): ReactElement {
   const score = match.games.at(-1);
   if (!score)
@@ -84,6 +94,9 @@ function LiveMatch({
       >
         Undo last point
       </button>
+      {match.status === "complete" && (
+        <button onClick={onNewMatch}>New match</button>
+      )}
       {previousGames.length > 0 && (
         <div className="game-history">
           <h2>Previous games</h2>
