@@ -60,6 +60,7 @@ function LiveMatch({
 
   const winnerName =
     match.winner === "home" ? match.homePlayer : match.awayPlayer;
+  const servingPlayer = match[`${match.servingSide}Player`];
   const won = gamesWon(match.games);
   const previousGames = previousCompletedGames(match.games);
   return (
@@ -68,6 +69,10 @@ function LiveMatch({
       <h1>
         {match.status === "complete" ? `${winnerName} wins` : "Live match"}
       </h1>
+      <p aria-atomic="true" aria-live="polite" className="visually-hidden">
+        {match.homePlayer}: {score.home}. {match.awayPlayer}: {score.away}.{" "}
+        {servingPlayer} is serving.
+      </p>
       <section>
         {(["home", "away"] as Side[]).map((side) => (
           <article key={side}>
