@@ -58,6 +58,8 @@ describe("match scoring workflow", () => {
     expect(createMatch).toHaveBeenCalledWith("Aino", "Kai");
     expect(screen.getByRole("heading", { name: "Aino" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Kai" })).toBeTruthy();
+    expect(screen.getByLabelText("Aino is serving")).toBeTruthy();
+    expect(screen.queryByLabelText("Kai is serving")).toBeNull();
     expect(screen.getAllByText("Games won: 0")).toHaveLength(2);
   });
 
@@ -87,6 +89,7 @@ describe("match scoring workflow", () => {
     vi.mocked(recordPoint).mockResolvedValue({
       ...startingMatch,
       games: [{ home: 1, away: 0 }],
+      servingSide: "away",
     });
     render(<App />);
     fireEvent.click(screen.getByRole("button", { name: "Start match" }));
@@ -100,6 +103,7 @@ describe("match scoring workflow", () => {
       expect(recordPoint).toHaveBeenCalledWith("match-1", "home"),
     );
     expect(screen.getByText("1", { selector: "strong" })).toBeTruthy();
+    expect(screen.getByLabelText("Kai is serving")).toBeTruthy();
   });
 
   it("prevents duplicate point submissions while a request is pending", async () => {
@@ -195,6 +199,7 @@ describe("match scoring workflow", () => {
     expect(screen.getAllByText("Games won: 1")).toHaveLength(1);
     expect(screen.getAllByText("0", { selector: "strong" })).toHaveLength(2);
     expect(screen.getByText("Game 1: 21–15")).toBeTruthy();
+    expect(screen.getByLabelText("Aino is serving")).toBeTruthy();
   });
 
   it("returns to match setup when starting a new match after completion", async () => {
@@ -228,8 +233,9 @@ describe("match scoring workflow", () => {
     // Arrange
     const matchAfterPoint: MatchState = {
       ...startingMatch,
-      games: [{ home: 1, away: 0 }],
-      pointHistory: ["home"],
+      games: [{ home: 0, away: 1 }],
+      pointHistory: ["away"],
+      servingSide: "away",
     };
     vi.mocked(createMatch).mockResolvedValue(startingMatch);
     vi.mocked(recordPoint).mockResolvedValue(matchAfterPoint);
@@ -237,8 +243,9 @@ describe("match scoring workflow", () => {
     render(<App />);
     fireEvent.click(screen.getByRole("button", { name: "Start match" }));
     await screen.findByRole("heading", { name: "Live match" });
-    fireEvent.click(screen.getByRole("button", { name: "Add point for Aino" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add point for Kai" }));
     await screen.findByText("1", { selector: "strong" });
+    await screen.findByLabelText("Kai is serving");
 
     // Act
     fireEvent.click(screen.getByRole("button", { name: "Undo last point" }));
@@ -246,5 +253,6 @@ describe("match scoring workflow", () => {
     // Assert
     await waitFor(() => expect(undoPoint).toHaveBeenCalledWith("match-1"));
     expect(screen.getAllByText("0", { selector: "strong" })).toHaveLength(2);
+    expect(screen.getByLabelText("Aino is serving")).toBeTruthy();
   });
 });

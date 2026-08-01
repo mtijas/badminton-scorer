@@ -60,6 +60,11 @@ strong {
   font-size: 5rem;
   margin: 1rem 0;
 }
+.serving-indicator {
+  margin: 0.5rem 0;
+  color: #007c91;
+  font-weight: 700;
+}
 .game-history {
   margin-top: 2rem;
   text-align: left;

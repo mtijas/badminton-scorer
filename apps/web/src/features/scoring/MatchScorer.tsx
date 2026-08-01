@@ -72,6 +72,18 @@ function LiveMatch({
         {(["home", "away"] as Side[]).map((side) => (
           <article key={side}>
             <h2>{match[`${side}Player`]}</h2>
+            {match.servingSide === side ? (
+              <p
+                aria-label={`${match[`${side}Player`]} is serving`}
+                className="serving-indicator"
+              >
+                Serving
+              </p>
+            ) : (
+              <p aria-hidden="true" className="serving-indicator">
+                {"\u00a0"}
+              </p>
+            )}
             <strong>{score[side]}</strong>
             <p>Games won: {won[side]}</p>
             <button
