@@ -1,11 +1,41 @@
 # Scoring Rules
 
-Matches are best of three games. The first side to win two games wins the match.
+## Supported format
+- Standard best-of-three 3×21 format
+- Singles initially supported
+- Any unsupported variants explicitly listed
 
-A game is normally won by reaching 21 points with a two-point lead. At 20-all, play continues until one side leads by two points. At 29-all, the side that reaches 30 wins the game, regardless of the margin.
+## Match and game scoring
+- Rally-point scoring
+- 21-point target
+- Two-point lead from 20-all
+- 30-point cap
+- First side to two games wins
 
-Recording a game-winning point immediately completes that game and starts the next game at 0–0, unless it also completes the match. Once the match is complete, additional points are rejected.
+## Serving
+- Toss determines initial choices
+- Rally winner serves next
+- Game winner serves first in next game
+- Even score: right court
+- Odd score: left court
 
-Badminton uses rally-point scoring: the side that wins a rally serves the next rally. The initial server is supplied when a score state is created.
+## Game transitions
+- Next game begins at 0–0
+- Game-winning side serves first
+- Change-of-ends rules
 
-Undo removes only the most recent recorded rally. It restores the score and serving side that immediately preceded that rally. Undoing with no recorded rallies is rejected.
+## Non-scoring events
+- Lets do not alter state
+- Operator determines officially awarded rally
+- Service-court-error correction policy
+
+## Scorer behaviour
+- Undo
+- Invalid action rejection
+- Match completion handling
+
+## Unsupported rules
+- Doubles player order, if not implemented
+- Handicap and alternative formats
+- Retirement, walkover and disqualification
+- 3×15 rules effective 4 January 2027
