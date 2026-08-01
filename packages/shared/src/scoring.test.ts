@@ -36,17 +36,17 @@ describe("badminton scoring", () => {
     expect(winner).toBe("home");
   });
 
-  it("starts the next game after a completed game", () => {
+  it("starts the next game as soon as the game-winning point is recorded", () => {
     // Arrange
-    const completedGame = [{ home: 21, away: 15 }];
+    const gamePoint = [{ home: 20, away: 15 }];
 
     // Act
-    const games = recordPoint(completedGame, "away");
+    const games = recordPoint(gamePoint, "home");
 
     // Assert
     expect(games).toEqual([
       { home: 21, away: 15 },
-      { home: 0, away: 1 },
+      { home: 0, away: 0 },
     ]);
   });
 

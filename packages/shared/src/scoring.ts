@@ -50,7 +50,22 @@ export function recordPoint(
       { home: side === "home" ? 1 : 0, away: side === "away" ? 1 : 0 },
     ];
   }
-  return [...games.slice(0, -1), { ...current, [side]: current[side] + 1 }];
+
+  const updatedGames = [
+    ...games.slice(0, -1),
+    { ...current, [side]: current[side] + 1 },
+  ];
+  const updatedCurrentGame = updatedGames.at(-1);
+
+  if (
+    updatedCurrentGame &&
+    gameWinner(updatedCurrentGame) &&
+    !matchWinner(updatedGames)
+  ) {
+    return [...updatedGames, { home: 0, away: 0 }];
+  }
+
+  return updatedGames;
 }
 
 export function createScoringState(initialServer: Side): ScoringState {

@@ -166,6 +166,37 @@ describe("match scoring workflow", () => {
     expect(screen.getByText("Game 1: 21–18")).toBeTruthy();
   });
 
+  it("immediately shows games won and the next game after a game-winning rally", async () => {
+    // Arrange
+    const gamePoint: MatchState = {
+      ...startingMatch,
+      games: [{ home: 20, away: 15 }],
+      pointHistory: Array<"home" | "away">(35).fill("home"),
+    };
+    const nextGame: MatchState = {
+      ...gamePoint,
+      games: [
+        { home: 21, away: 15 },
+        { home: 0, away: 0 },
+      ],
+      pointHistory: [...gamePoint.pointHistory, "home"],
+    };
+    vi.mocked(createMatch).mockResolvedValue(gamePoint);
+    vi.mocked(recordPoint).mockResolvedValue(nextGame);
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: "Start match" }));
+    await screen.findByRole("heading", { name: "Live match" });
+
+    // Act
+    fireEvent.click(screen.getByRole("button", { name: "Add point for Aino" }));
+
+    // Assert
+    await screen.findByText("Game 2 · Best of 3");
+    expect(screen.getAllByText("Games won: 1")).toHaveLength(1);
+    expect(screen.getAllByText("0", { selector: "strong" })).toHaveLength(2);
+    expect(screen.getByText("Game 1: 21–15")).toBeTruthy();
+  });
+
   it("returns to match setup when starting a new match after completion", async () => {
     // Arrange
     const completedMatch: MatchState = {
