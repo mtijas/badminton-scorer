@@ -27,10 +27,10 @@ Before changing code:
 After changing code, run:
 
 ```bash
-npm run typecheck
-npm run lint
-npm run test
-npm run build
+pnpm typecheck
+pnpm lint
+pnpm test
+pnpm build
 ```
 
 All commands must pass before the task is considered complete.
@@ -60,8 +60,9 @@ Document the canonical development, test, lint, and Docker commands in `README.m
 
 ## Scoring domain
 
-- Keep scoring rules inside src/scoring.
-- The scoring module must not import React, browser APIs or persistence code.
+- Keep pure badminton scoring rules in `packages/shared`.
+- Neither `apps/web` nor `apps/api` may duplicate score calculations.
+- `packages/shared` must not depend on React, Fastify, browser APIs, or persistence.
 - Represent scoring transitions as pure functions where practical.
 - Every scoring-rule change must include unit tests.
 - Cover games at 20–20, the 30-point cap, service changes, undo and match completion.
