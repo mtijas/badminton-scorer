@@ -215,6 +215,68 @@ describe("match API", () => {
     expect(updatedMatch.winner).toBeNull();
   });
 
+  it("marks the match complete when a side wins its second game", async () => {
+    // Arrange
+    const app = await buildApp();
+    apps.push(app);
+    const createResponse = await app.inject({
+      method: "POST",
+      url: "/matches",
+      payload: { homePlayer: "Aino", awayPlayer: "Kai" },
+    });
+    const match = createResponse.json<MatchState>();
+    const matchWinningRallies = [
+      ...homeGameWinningRallies,
+      ...homeGameWinningRallies,
+    ];
+    await recordRallies(app, match.id, matchWinningRallies.slice(0, -1));
+
+    // Act
+    const response = await app.inject({
+      method: "POST",
+      url: `/matches/${match.id}/points`,
+      payload: { side: "home" },
+    });
+    const updatedMatch = response.json<MatchState>();
+
+    // Assert
+    expect(response.statusCode).toBe(200);
+    expect(updatedMatch.games).toEqual([
+      { home: 21, away: 15 },
+      { home: 21, away: 15 },
+    ]);
+    expect(updatedMatch.status).toBe("complete");
+    expect(updatedMatch.winner).toBe("home");
+  });
+
+  it("returns JSON error objects from different endpoints", async () => {
+    // Arrange
+    const app = await buildApp();
+    apps.push(app);
+    const createResponse = await app.inject({
+      method: "POST",
+      url: "/matches",
+      payload: { homePlayer: "Aino", awayPlayer: "Kai" },
+    });
+    const match = createResponse.json<MatchState>();
+
+    // Act
+    const responses = await Promise.all([
+      app.inject({ method: "GET", url: "/matches/does-not-exist" }),
+      app.inject({
+        method: "POST",
+        url: `/matches/${match.id}/points`,
+        payload: { side: "visitor" },
+      }),
+    ]);
+
+    // Assert
+    for (const response of responses) {
+      expect(response.headers["content-type"]).toContain("application/json");
+      expect(response.json()).toEqual({ error: expect.any(String) });
+    }
+  });
+
   it("undoes the latest point and restores the previous scoring state", async () => {
     // Arrange
     const app = await buildApp();
