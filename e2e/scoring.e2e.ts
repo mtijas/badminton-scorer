@@ -32,3 +32,15 @@ test("records and undoes a point in a new match", async ({ page }) => {
   await expect(page.locator("strong")).toHaveText(["0", "0"]);
   await expect(page.getByLabel("Aino is serving")).toBeVisible();
 });
+
+test("uses the scorer's selected first server", async ({ page }) => {
+  // Arrange
+  await page.goto("/");
+
+  // Act
+  await page.getByRole("radio", { name: "Away serves" }).check();
+  await page.getByRole("button", { name: "Start match" }).click();
+
+  // Assert
+  await expect(page.getByLabel("Player two is serving")).toBeVisible();
+});

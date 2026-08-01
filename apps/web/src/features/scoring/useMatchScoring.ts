@@ -6,7 +6,11 @@ export interface MatchScoringController {
   readonly match: MatchState | null;
   readonly error: string | null;
   readonly isUpdatingScore: boolean;
-  startMatch(homePlayer: string, awayPlayer: string): Promise<void>;
+  startMatch(
+    homePlayer: string,
+    awayPlayer: string,
+    initialServer: Side,
+  ): Promise<void>;
   addPoint(side: Side): Promise<void>;
   undoLastPoint(): Promise<void>;
   newMatch(): void;
@@ -21,10 +25,11 @@ export function useMatchScoring(): MatchScoringController {
   async function startMatch(
     homePlayer: string,
     awayPlayer: string,
+    initialServer: Side,
   ): Promise<void> {
     try {
       setError(null);
-      setMatch(await createMatch(homePlayer, awayPlayer));
+      setMatch(await createMatch(homePlayer, awayPlayer, initialServer));
     } catch (caught) {
       setError(messageOf(caught));
     }

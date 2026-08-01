@@ -4,9 +4,25 @@ import type { MatchState, Side } from "@badminton-scorer/shared";
 import { buildApp } from "./app.js";
 
 const whitespaceOnlyNameCases = [
-  { player: "home", homePlayer: " \t ", awayPlayer: "Kai" },
-  { player: "away", homePlayer: "Aino", awayPlayer: "\n " },
+  {
+    player: "home",
+    homePlayer: " \t ",
+    awayPlayer: "Kai",
+    initialServer: "home",
+  },
+  {
+    player: "away",
+    homePlayer: "Aino",
+    awayPlayer: "\n ",
+    initialServer: "home",
+  },
 ] as const;
+
+const validMatchRequest = {
+  homePlayer: "Aino",
+  awayPlayer: "Kai",
+  initialServer: "home",
+} as const;
 
 const homeGameWinningRallies = [
   ...Array<Side>(20).fill("home"),
@@ -30,7 +46,11 @@ describe("match API", () => {
     const response = await app.inject({
       method: "POST",
       url: "/matches",
-      payload: { homePlayer: " Aino ", awayPlayer: "Kai " },
+      payload: {
+        homePlayer: " Aino ",
+        awayPlayer: "Kai ",
+        initialServer: "away",
+      },
     });
 
     // Assert
@@ -39,8 +59,8 @@ describe("match API", () => {
       id: expect.any(String),
       homePlayer: "Aino",
       awayPlayer: "Kai",
-      initialServer: "home",
-      servingSide: "home",
+      initialServer: "away",
+      servingSide: "away",
       games: [{ home: 0, away: 0 }],
       pointHistory: [],
       status: "in_progress",
@@ -55,7 +75,7 @@ describe("match API", () => {
     const createResponse = await app.inject({
       method: "POST",
       url: "/matches",
-      payload: { homePlayer: "Aino", awayPlayer: "Kai" },
+      payload: validMatchRequest,
     });
     const match = createResponse.json<MatchState>();
 
@@ -77,7 +97,7 @@ describe("match API", () => {
 
   it.each(whitespaceOnlyNameCases)(
     "rejects a whitespace-only $player player name",
-    async ({ homePlayer, awayPlayer }) => {
+    async ({ homePlayer, awayPlayer, initialServer }) => {
       // Arrange
       const app = await buildApp();
       apps.push(app);
@@ -86,13 +106,35 @@ describe("match API", () => {
       const response = await app.inject({
         method: "POST",
         url: "/matches",
-        payload: { homePlayer, awayPlayer },
+        payload: { homePlayer, awayPlayer, initialServer },
       });
 
       // Assert
       expect(response.statusCode).toBe(400);
       expect(response.json()).toEqual({
         error: "Both player names are required.",
+      });
+    },
+  );
+
+  it.each([undefined, "visitor"] as const)(
+    "rejects an invalid initial server",
+    async (initialServer) => {
+      // Arrange
+      const app = await buildApp();
+      apps.push(app);
+
+      // Act
+      const response = await app.inject({
+        method: "POST",
+        url: "/matches",
+        payload: { homePlayer: "Aino", awayPlayer: "Kai", initialServer },
+      });
+
+      // Assert
+      expect(response.statusCode).toBe(400);
+      expect(response.json()).toEqual({
+        error: "initialServer must be home or away.",
       });
     },
   );
@@ -120,7 +162,7 @@ describe("match API", () => {
     const createResponse = await app.inject({
       method: "POST",
       url: "/matches",
-      payload: { homePlayer: "Aino", awayPlayer: "Kai" },
+      payload: validMatchRequest,
     });
     const match = createResponse.json<MatchState>();
 
@@ -143,7 +185,7 @@ describe("match API", () => {
     const createResponse = await app.inject({
       method: "POST",
       url: "/matches",
-      payload: { homePlayer: "Aino", awayPlayer: "Kai" },
+      payload: validMatchRequest,
     });
     const match = createResponse.json<MatchState>();
     await recordRallies(app, match.id, [
@@ -170,7 +212,7 @@ describe("match API", () => {
     const createResponse = await app.inject({
       method: "POST",
       url: "/matches",
-      payload: { homePlayer: "Aino", awayPlayer: "Kai" },
+      payload: validMatchRequest,
     });
     const match = createResponse.json<MatchState>();
 
@@ -192,7 +234,7 @@ describe("match API", () => {
     const createResponse = await app.inject({
       method: "POST",
       url: "/matches",
-      payload: { homePlayer: "Aino", awayPlayer: "Kai" },
+      payload: validMatchRequest,
     });
     const match = createResponse.json<MatchState>();
     await recordRallies(app, match.id, homeGameWinningRallies.slice(0, -1));
@@ -222,7 +264,7 @@ describe("match API", () => {
     const createResponse = await app.inject({
       method: "POST",
       url: "/matches",
-      payload: { homePlayer: "Aino", awayPlayer: "Kai" },
+      payload: validMatchRequest,
     });
     const match = createResponse.json<MatchState>();
     const matchWinningRallies = [
@@ -256,7 +298,7 @@ describe("match API", () => {
     const createResponse = await app.inject({
       method: "POST",
       url: "/matches",
-      payload: { homePlayer: "Aino", awayPlayer: "Kai" },
+      payload: validMatchRequest,
     });
     const match = createResponse.json<MatchState>();
 
@@ -284,7 +326,7 @@ describe("match API", () => {
     const createResponse = await app.inject({
       method: "POST",
       url: "/matches",
-      payload: { homePlayer: "Aino", awayPlayer: "Kai" },
+      payload: validMatchRequest,
     });
     const match = createResponse.json<MatchState>();
     await app.inject({

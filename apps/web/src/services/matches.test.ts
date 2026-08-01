@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { MatchState } from "@badminton-scorer/shared";
-import { undoPoint } from "./matches.js";
+import { createMatch, undoPoint } from "./matches.js";
 
 const match: MatchState = {
   id: "match-1",
@@ -17,6 +17,37 @@ const match: MatchState = {
 describe("match service", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+  });
+
+  it("sends the toss-selected first server when creating a match", async () => {
+    // Arrange
+    const awayServerMatch: MatchState = {
+      ...match,
+      initialServer: "away",
+      servingSide: "away",
+    };
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(awayServerMatch), {
+        status: 201,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    // Act
+    const result = await createMatch("Aino", "Kai", "away");
+
+    // Assert
+    expect(fetchMock).toHaveBeenCalledWith("http://localhost:3000/matches", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        homePlayer: "Aino",
+        awayPlayer: "Kai",
+        initialServer: "away",
+      }),
+    });
+    expect(result).toEqual(awayServerMatch);
   });
 
   it("sends a bodyless undo request without a JSON content type", async () => {

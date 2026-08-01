@@ -19,29 +19,31 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   app.get("/health", async () => ({ status: "ok" }));
 
-  app.post<{ Body: { homePlayer: string; awayPlayer: string } }>(
-    "/matches",
-    async (request, reply) => {
-      const { homePlayer, awayPlayer } = request.body ?? {};
-      if (!isPlayerName(homePlayer) || !isPlayerName(awayPlayer)) {
-        return reply
-          .code(400)
-          .send({ error: "Both player names are required." });
-      }
+  app.post<{
+    Body: { homePlayer: string; awayPlayer: string; initialServer: Side };
+  }>("/matches", async (request, reply) => {
+    const { homePlayer, awayPlayer, initialServer } = request.body ?? {};
+    if (!isPlayerName(homePlayer) || !isPlayerName(awayPlayer)) {
+      return reply.code(400).send({ error: "Both player names are required." });
+    }
+    if (initialServer !== "home" && initialServer !== "away") {
+      return reply
+        .code(400)
+        .send({ error: "initialServer must be home or away." });
+    }
 
-      const scoringState = createScoringState("home");
-      const match: MatchState = {
-        id: crypto.randomUUID(),
-        homePlayer: homePlayer.trim(),
-        awayPlayer: awayPlayer.trim(),
-        ...scoringState,
-        status: "in_progress",
-        winner: null,
-      };
-      matches.set(match.id, match);
-      return reply.code(201).send(match);
-    },
-  );
+    const scoringState = createScoringState(initialServer);
+    const match: MatchState = {
+      id: crypto.randomUUID(),
+      homePlayer: homePlayer.trim(),
+      awayPlayer: awayPlayer.trim(),
+      ...scoringState,
+      status: "in_progress",
+      winner: null,
+    };
+    matches.set(match.id, match);
+    return reply.code(201).send(match);
+  });
 
   app.get<{ Params: { id: string } }>(
     "/matches/:id",

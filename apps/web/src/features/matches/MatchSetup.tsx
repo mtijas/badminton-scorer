@@ -1,14 +1,20 @@
 import { type FormEvent, type ReactElement, useState } from "react";
+import type { Side } from "@badminton-scorer/shared";
 import { RequestError } from "../../components/RequestError.js";
 
 interface MatchSetupProps {
   readonly error: string | null;
-  readonly onStart: (homePlayer: string, awayPlayer: string) => Promise<void>;
+  readonly onStart: (
+    homePlayer: string,
+    awayPlayer: string,
+    initialServer: Side,
+  ) => Promise<void>;
 }
 
 export function MatchSetup({ error, onStart }: MatchSetupProps): ReactElement {
   const [homePlayer, setHomePlayer] = useState("Player one");
   const [awayPlayer, setAwayPlayer] = useState("Player two");
+  const [initialServer, setInitialServer] = useState<Side>("home");
   const [validationError, setValidationError] = useState<string | null>(null);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>): void {
@@ -19,7 +25,7 @@ export function MatchSetup({ error, onStart }: MatchSetupProps): ReactElement {
     }
 
     setValidationError(null);
-    void onStart(homePlayer, awayPlayer);
+    void onStart(homePlayer, awayPlayer, initialServer);
   }
 
   return (
@@ -40,6 +46,27 @@ export function MatchSetup({ error, onStart }: MatchSetupProps): ReactElement {
             onChange={(event) => setAwayPlayer(event.target.value)}
           />
         </label>
+        <fieldset>
+          <legend>First server (after toss)</legend>
+          <label>
+            <input
+              checked={initialServer === "home"}
+              name="initial-server"
+              onChange={() => setInitialServer("home")}
+              type="radio"
+            />
+            Home serves
+          </label>
+          <label>
+            <input
+              checked={initialServer === "away"}
+              name="initial-server"
+              onChange={() => setInitialServer("away")}
+              type="radio"
+            />
+            Away serves
+          </label>
+        </fieldset>
         <button type="submit">Start match</button>
       </form>
       {(validationError ?? error) && (

@@ -15,10 +15,10 @@ Creates an in-progress match.
 Request:
 
 ```json
-{ "homePlayer": "Aino", "awayPlayer": "Kai" }
+{ "homePlayer": "Aino", "awayPlayer": "Kai", "initialServer": "home" }
 ```
 
-Returns `201` with a match object. Player names must contain at least one non-whitespace character and have a maximum length of 80 characters. The home player serves first.
+Returns `201` with a match object. Player names must contain at least one non-whitespace character and have a maximum length of 80 characters. `initialServer` must be `home` or `away` and records the serving side selected after the toss.
 
 ## `GET /matches/:id`
 

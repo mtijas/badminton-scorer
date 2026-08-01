@@ -5,10 +5,11 @@ const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 export async function createMatch(
   homePlayer: string,
   awayPlayer: string,
+  initialServer: Side,
 ): Promise<MatchState> {
   return request("/matches", {
     method: "POST",
-    body: JSON.stringify({ homePlayer, awayPlayer }),
+    body: JSON.stringify({ homePlayer, awayPlayer, initialServer }),
   });
 }
 

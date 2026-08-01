@@ -55,12 +55,35 @@ describe("match scoring workflow", () => {
 
     // Assert
     await screen.findByRole("heading", { name: "Live match" });
-    expect(createMatch).toHaveBeenCalledWith("Aino", "Kai");
+    expect(createMatch).toHaveBeenCalledWith("Aino", "Kai", "home");
     expect(screen.getByRole("heading", { name: "Aino" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Kai" })).toBeTruthy();
     expect(screen.getByLabelText("Aino is serving")).toBeTruthy();
     expect(screen.queryByLabelText("Kai is serving")).toBeNull();
     expect(screen.getAllByText("Games won: 0")).toHaveLength(2);
+  });
+
+  it("records the selected away player as the first server", async () => {
+    // Arrange
+    vi.mocked(createMatch).mockResolvedValue({
+      ...startingMatch,
+      initialServer: "away",
+      servingSide: "away",
+    });
+    render(<App />);
+
+    // Act
+    fireEvent.click(screen.getByRole("radio", { name: "Away serves" }));
+    fireEvent.click(screen.getByRole("button", { name: "Start match" }));
+
+    // Assert
+    await screen.findByRole("heading", { name: "Live match" });
+    expect(createMatch).toHaveBeenCalledWith(
+      "Player one",
+      "Player two",
+      "away",
+    );
+    expect(screen.getByLabelText("Kai is serving")).toBeTruthy();
   });
 
   it("rejects empty or whitespace-only player names before creating a match", () => {
