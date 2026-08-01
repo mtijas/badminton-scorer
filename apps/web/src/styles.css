@@ -68,3 +68,11 @@ strong {
   margin-bottom: 0;
   padding-left: 1.5rem;
 }
+.request-error {
+  margin-top: 1.5rem;
+  padding: 0.75rem 1rem;
+  color: #8a1c1c;
+  background: #ffe3e3;
+  border: 1px solid #ffbdbd;
+  border-radius: 0.4rem;
+}

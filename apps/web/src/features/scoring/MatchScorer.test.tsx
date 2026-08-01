@@ -104,6 +104,28 @@ describe("match scoring workflow", () => {
     expect((addPointButton as HTMLButtonElement).disabled).toBe(true);
   });
 
+  it("shows a clear network failure after a point request fails", async () => {
+    // Arrange
+    vi.mocked(createMatch).mockResolvedValue(startingMatch);
+    vi.mocked(recordPoint).mockRejectedValue(
+      new Error(
+        "Cannot reach the scoring API. Check your connection and try again.",
+      ),
+    );
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: "Start match" }));
+    await screen.findByRole("heading", { name: "Live match" });
+
+    // Act
+    fireEvent.click(screen.getByRole("button", { name: "Add point for Aino" }));
+
+    // Assert
+    const alert = await screen.findByRole("alert");
+    expect(alert.textContent).toBe(
+      "Cannot reach the scoring API. Check your connection and try again.",
+    );
+  });
+
   it("shows scores from completed games before the current game", async () => {
     // Arrange
     const matchWithPreviousGame: MatchState = {

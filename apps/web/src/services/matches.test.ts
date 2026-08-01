@@ -39,4 +39,36 @@ describe("match service", () => {
     );
     expect(result).toEqual(match);
   });
+
+  it("reports a clear message when the scoring API cannot be reached", async () => {
+    // Arrange
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockRejectedValue(new TypeError("Failed to fetch")),
+    );
+
+    // Act
+    const request = undoPoint(match.id);
+
+    // Assert
+    await expect(request).rejects.toThrow(
+      "Cannot reach the scoring API. Check your connection and try again.",
+    );
+  });
+
+  it("reports a clear fallback when an API error has no JSON payload", async () => {
+    // Arrange
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response("Unavailable", { status: 503 })),
+    );
+
+    // Act
+    const request = undoPoint(match.id);
+
+    // Assert
+    await expect(request).rejects.toThrow(
+      "The scoring API returned an error (503).",
+    );
+  });
 });

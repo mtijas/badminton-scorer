@@ -1,4 +1,5 @@
 import { type FormEvent, type ReactElement, useState } from "react";
+import { RequestError } from "../../components/RequestError.js";
 
 interface MatchSetupProps {
   readonly error: string | null;
@@ -34,7 +35,7 @@ export function MatchSetup({ error, onStart }: MatchSetupProps): ReactElement {
         </label>
         <button type="submit">Start match</button>
       </form>
-      {error && <p role="alert">{error}</p>}
+      {error && <RequestError message={error} />}
     </main>
   );
 }

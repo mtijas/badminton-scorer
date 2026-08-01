@@ -5,6 +5,7 @@ import {
   type MatchState,
   type Side,
 } from "@badminton-scorer/shared";
+import { RequestError } from "../../components/RequestError.js";
 import { MatchSetup } from "../matches/MatchSetup.js";
 import { useMatchScoring } from "./useMatchScoring.js";
 
@@ -95,7 +96,7 @@ function LiveMatch({
           </ol>
         </div>
       )}
-      {error && <p role="alert">{error}</p>}
+      {error && <RequestError message={error} />}
     </main>
   );
 }

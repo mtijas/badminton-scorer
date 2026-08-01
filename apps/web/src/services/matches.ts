@@ -28,13 +28,42 @@ async function request(path: string, init: RequestInit): Promise<MatchState> {
     init.body === undefined
       ? undefined
       : { "Content-Type": "application/json" };
-  const response = await fetch(`${apiUrl}${path}`, {
-    ...init,
-    headers,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${apiUrl}${path}`, {
+      ...init,
+      headers,
+    });
+  } catch {
+    throw new Error(
+      "Cannot reach the scoring API. Check your connection and try again.",
+    );
+  }
+
   if (!response.ok) {
-    const payload = (await response.json()) as { error?: string };
-    throw new Error(payload.error ?? "The request failed.");
+    throw new Error(await apiErrorMessage(response));
   }
   return response.json() as Promise<MatchState>;
+}
+
+async function apiErrorMessage(response: Response): Promise<string> {
+  const fallback = `The scoring API returned an error (${response.status}).`;
+
+  try {
+    const payload: unknown = await response.json();
+    if (isErrorPayload(payload)) return payload.error;
+  } catch {
+    return fallback;
+  }
+
+  return fallback;
+}
+
+function isErrorPayload(payload: unknown): payload is { error: string } {
+  return (
+    typeof payload === "object" &&
+    payload !== null &&
+    "error" in payload &&
+    typeof payload.error === "string"
+  );
 }
