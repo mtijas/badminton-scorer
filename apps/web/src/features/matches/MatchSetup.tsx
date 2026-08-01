@@ -9,9 +9,16 @@ interface MatchSetupProps {
 export function MatchSetup({ error, onStart }: MatchSetupProps): ReactElement {
   const [homePlayer, setHomePlayer] = useState("Player one");
   const [awayPlayer, setAwayPlayer] = useState("Player two");
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
+    if (!hasPlayerName(homePlayer) || !hasPlayerName(awayPlayer)) {
+      setValidationError("Enter a name for both players.");
+      return;
+    }
+
+    setValidationError(null);
     void onStart(homePlayer, awayPlayer);
   }
 
@@ -35,7 +42,13 @@ export function MatchSetup({ error, onStart }: MatchSetupProps): ReactElement {
         </label>
         <button type="submit">Start match</button>
       </form>
-      {error && <RequestError message={error} />}
+      {(validationError ?? error) && (
+        <RequestError message={validationError ?? error ?? ""} />
+      )}
     </main>
   );
+}
+
+function hasPlayerName(value: string): boolean {
+  return value.trim().length > 0;
 }

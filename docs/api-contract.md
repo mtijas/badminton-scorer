@@ -18,7 +18,7 @@ Request:
 { "homePlayer": "Aino", "awayPlayer": "Kai" }
 ```
 
-Returns `201` with a match object. Player names are required and have a maximum length of 80 characters. The home player serves first.
+Returns `201` with a match object. Player names must contain at least one non-whitespace character and have a maximum length of 80 characters. The home player serves first.
 
 ## `GET /matches/:id`
 

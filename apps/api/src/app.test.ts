@@ -37,6 +37,25 @@ describe("match API", () => {
     expect(updatedMatch.pointHistory).toEqual(["away"]);
   });
 
+  it("rejects empty or whitespace-only player names", async () => {
+    // Arrange
+    const app = await buildApp();
+    apps.push(app);
+
+    // Act
+    const response = await app.inject({
+      method: "POST",
+      url: "/matches",
+      payload: { homePlayer: "   ", awayPlayer: "Kai" },
+    });
+
+    // Assert
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({
+      error: "Both player names are required.",
+    });
+  });
+
   it("undoes the latest point and restores the previous scoring state", async () => {
     // Arrange
     const app = await buildApp();

@@ -61,6 +61,26 @@ describe("match scoring workflow", () => {
     expect(screen.getAllByText("Games won: 0")).toHaveLength(2);
   });
 
+  it("rejects empty or whitespace-only player names before creating a match", () => {
+    // Arrange
+    render(<App />);
+    fireEvent.change(screen.getByLabelText("Home player"), {
+      target: { value: "   " },
+    });
+    fireEvent.change(screen.getByLabelText("Away player"), {
+      target: { value: "Kai" },
+    });
+
+    // Act
+    fireEvent.click(screen.getByRole("button", { name: "Start match" }));
+
+    // Assert
+    expect(screen.getByRole("alert").textContent).toBe(
+      "Enter a name for both players.",
+    );
+    expect(createMatch).not.toHaveBeenCalled();
+  });
+
   it("updates the visible score after a player receives a point", async () => {
     // Arrange
     vi.mocked(createMatch).mockResolvedValue(startingMatch);
