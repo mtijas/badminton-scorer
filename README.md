@@ -37,7 +37,14 @@ pnpm format  # format project files with Prettier
 pnpm typecheck # type-check all workspaces without generating output
 pnpm build   # type-check and build deployable apps
 pnpm test    # run shared scoring-rule tests
+pnpm test:e2e # run the Playwright browser scoring smoke test
 pnpm lint    # lint all JavaScript and TypeScript files
+```
+
+Install the Chromium browser once before running the browser test locally:
+
+```sh
+pnpm exec playwright install chromium
 ```
 
 Copy `.env.example` to `.env` only when overriding the local defaults.

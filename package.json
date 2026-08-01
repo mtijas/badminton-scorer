@@ -8,17 +8,20 @@
   ],
   "scripts": {
     "dev": "concurrently -n api,web -c blue,green \"pnpm --filter @badminton-scorer/api dev\" \"pnpm --filter @badminton-scorer/web dev\"",
-    "check": "pnpm format:check && pnpm typecheck && pnpm lint && pnpm test && pnpm build",
+    "check": "pnpm format:check && pnpm typecheck && pnpm lint && pnpm test && pnpm test:e2e && pnpm build",
     "build": "pnpm -r --if-present run build",
-    "typecheck": "pnpm -r --if-present run typecheck",
+    "typecheck": "pnpm -r --if-present run typecheck && tsc --noEmit --project tsconfig.json && tsc --noEmit --project e2e/tsconfig.json",
     "lint": "eslint . --max-warnings=0",
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "test": "pnpm --filter @badminton-scorer/shared build && vitest run"
+    "test": "pnpm --filter @badminton-scorer/shared build && vitest run",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^22.20.1",
     "concurrently": "^9.0.0",
     "eslint": "^9.0.0",
     "eslint-config-prettier": "^10.0.0",
