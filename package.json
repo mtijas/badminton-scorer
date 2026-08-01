@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "dev": "concurrently -n api,web -c blue,green \"pnpm --filter @badminton-scorer/api dev\" \"pnpm --filter @badminton-scorer/web dev\"",
+    "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build",
     "build": "pnpm -r --if-present run build",
     "typecheck": "pnpm -r --if-present run typecheck",
     "lint": "eslint .",

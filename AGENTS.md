@@ -27,13 +27,10 @@ Before changing code:
 After changing code, run:
 
 ```bash
-pnpm typecheck
-pnpm lint
-pnpm test
-pnpm build
+pnpm check
 ```
 
-All commands must pass before the task is considered complete.
+`pnpm check` is the required completion gate. It runs type checking, linting, tests, and builds; it must pass before the task is considered complete.
 
 ## Commands
 
