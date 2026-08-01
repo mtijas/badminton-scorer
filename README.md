@@ -13,7 +13,13 @@ The initial product scope is players, matches, point recording, game/match winne
 
 ## Getting started
 
-Requires Node.js 22.13 or later and pnpm 11 (Corepack can provide it with `corepack enable`).
+Requires Node.js 22.13 or later and pnpm 11. Install the pinned pnpm version directly:
+
+```sh
+npm install --global pnpm@11.9.0
+```
+
+Docker uses the same direct installation because the Corepack version bundled with the Node image can have outdated npm signing-key metadata.
 
 ```sh
 pnpm install
