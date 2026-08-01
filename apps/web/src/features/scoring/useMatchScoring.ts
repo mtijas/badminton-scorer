@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { MatchState, Side } from "@badminton-scorer/shared";
 import { createMatch, recordPoint, undoPoint } from "../../services/matches.js";
 
 export interface MatchScoringController {
   readonly match: MatchState | null;
   readonly error: string | null;
+  readonly isUpdatingScore: boolean;
   startMatch(homePlayer: string, awayPlayer: string): Promise<void>;
   addPoint(side: Side): Promise<void>;
   undoLastPoint(): Promise<void>;
@@ -13,6 +14,8 @@ export interface MatchScoringController {
 export function useMatchScoring(): MatchScoringController {
   const [match, setMatch] = useState<MatchState | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isUpdatingScore, setIsUpdatingScore] = useState(false);
+  const scoreUpdateInFlight = useRef(false);
 
   async function startMatch(
     homePlayer: string,
@@ -28,27 +31,40 @@ export function useMatchScoring(): MatchScoringController {
 
   async function addPoint(side: Side): Promise<void> {
     if (!match) return;
-
-    try {
-      setError(null);
-      setMatch(await recordPoint(match.id, side));
-    } catch (caught) {
-      setError(messageOf(caught));
-    }
+    await updateScore(() => recordPoint(match.id, side));
   }
 
   async function undoLastPoint(): Promise<void> {
     if (!match) return;
+    await updateScore(() => undoPoint(match.id));
+  }
+
+  async function updateScore(
+    operation: () => Promise<MatchState>,
+  ): Promise<void> {
+    if (scoreUpdateInFlight.current) return;
+    scoreUpdateInFlight.current = true;
+    setIsUpdatingScore(true);
 
     try {
       setError(null);
-      setMatch(await undoPoint(match.id));
+      setMatch(await operation());
     } catch (caught) {
       setError(messageOf(caught));
+    } finally {
+      scoreUpdateInFlight.current = false;
+      setIsUpdatingScore(false);
     }
   }
 
-  return { match, error, startMatch, addPoint, undoLastPoint };
+  return {
+    match,
+    error,
+    isUpdatingScore,
+    startMatch,
+    addPoint,
+    undoLastPoint,
+  };
 }
 
 function messageOf(value: unknown): string {

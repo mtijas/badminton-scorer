@@ -9,7 +9,7 @@ import { MatchSetup } from "../matches/MatchSetup.js";
 import { useMatchScoring } from "./useMatchScoring.js";
 
 export function MatchScorer(): ReactElement {
-  const { match, error, startMatch, addPoint, undoLastPoint } =
+  const { match, error, isUpdatingScore, startMatch, addPoint, undoLastPoint } =
     useMatchScoring();
 
   if (!match) return <MatchSetup error={error} onStart={startMatch} />;
@@ -19,6 +19,7 @@ export function MatchScorer(): ReactElement {
       match={match}
       onAddPoint={addPoint}
       onUndoLastPoint={undoLastPoint}
+      isUpdatingScore={isUpdatingScore}
     />
   );
 }
@@ -28,6 +29,7 @@ interface LiveMatchProps {
   readonly match: MatchState;
   readonly onAddPoint: (side: Side) => Promise<void>;
   readonly onUndoLastPoint: () => Promise<void>;
+  readonly isUpdatingScore: boolean;
 }
 
 function LiveMatch({
@@ -35,6 +37,7 @@ function LiveMatch({
   match,
   onAddPoint,
   onUndoLastPoint,
+  isUpdatingScore,
 }: LiveMatchProps): ReactElement {
   const score = match.games.at(-1);
   if (!score)
@@ -62,7 +65,7 @@ function LiveMatch({
             <p>Games won: {won[side]}</p>
             <button
               aria-label={`Add point for ${match[`${side}Player`]}`}
-              disabled={match.status === "complete"}
+              disabled={match.status === "complete" || isUpdatingScore}
               onClick={() => {
                 void onAddPoint(side);
               }}
@@ -73,7 +76,7 @@ function LiveMatch({
         ))}
       </section>
       <button
-        disabled={match.pointHistory.length === 0}
+        disabled={match.pointHistory.length === 0 || isUpdatingScore}
         onClick={() => {
           void onUndoLastPoint();
         }}

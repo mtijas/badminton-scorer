@@ -82,6 +82,28 @@ describe("match scoring workflow", () => {
     expect(screen.getByText("1", { selector: "strong" })).toBeTruthy();
   });
 
+  it("prevents duplicate point submissions while a request is pending", async () => {
+    // Arrange
+    vi.mocked(createMatch).mockResolvedValue(startingMatch);
+    vi.mocked(recordPoint).mockImplementation(
+      () => new Promise<MatchState>(() => undefined),
+    );
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: "Start match" }));
+    await screen.findByRole("heading", { name: "Live match" });
+    const addPointButton = screen.getByRole("button", {
+      name: "Add point for Aino",
+    });
+
+    // Act
+    fireEvent.click(addPointButton);
+    fireEvent.click(addPointButton);
+
+    // Assert
+    expect(recordPoint).toHaveBeenCalledTimes(1);
+    expect((addPointButton as HTMLButtonElement).disabled).toBe(true);
+  });
+
   it("shows scores from completed games before the current game", async () => {
     // Arrange
     const matchWithPreviousGame: MatchState = {
