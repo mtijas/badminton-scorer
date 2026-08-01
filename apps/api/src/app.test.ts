@@ -185,6 +185,36 @@ describe("match API", () => {
     expect(response.json()).toEqual({ error: "There is no point to undo." });
   });
 
+  it("starts the next game when the game-winning point is recorded", async () => {
+    // Arrange
+    const app = await buildApp();
+    apps.push(app);
+    const createResponse = await app.inject({
+      method: "POST",
+      url: "/matches",
+      payload: { homePlayer: "Aino", awayPlayer: "Kai" },
+    });
+    const match = createResponse.json<MatchState>();
+    await recordRallies(app, match.id, homeGameWinningRallies.slice(0, -1));
+
+    // Act
+    const response = await app.inject({
+      method: "POST",
+      url: `/matches/${match.id}/points`,
+      payload: { side: "home" },
+    });
+    const updatedMatch = response.json<MatchState>();
+
+    // Assert
+    expect(response.statusCode).toBe(200);
+    expect(updatedMatch.games).toEqual([
+      { home: 21, away: 15 },
+      { home: 0, away: 0 },
+    ]);
+    expect(updatedMatch.status).toBe("in_progress");
+    expect(updatedMatch.winner).toBeNull();
+  });
+
   it("undoes the latest point and restores the previous scoring state", async () => {
     // Arrange
     const app = await buildApp();
