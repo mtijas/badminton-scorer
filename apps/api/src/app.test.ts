@@ -163,6 +163,28 @@ describe("match API", () => {
     expect(response.json()).toEqual({ error: "Match is already complete." });
   });
 
+  it("rejects undo when no rallies have been recorded", async () => {
+    // Arrange
+    const app = await buildApp();
+    apps.push(app);
+    const createResponse = await app.inject({
+      method: "POST",
+      url: "/matches",
+      payload: { homePlayer: "Aino", awayPlayer: "Kai" },
+    });
+    const match = createResponse.json<MatchState>();
+
+    // Act
+    const response = await app.inject({
+      method: "POST",
+      url: `/matches/${match.id}/undo`,
+    });
+
+    // Assert
+    expect(response.statusCode).toBe(409);
+    expect(response.json()).toEqual({ error: "There is no point to undo." });
+  });
+
   it("undoes the latest point and restores the previous scoring state", async () => {
     // Arrange
     const app = await buildApp();
