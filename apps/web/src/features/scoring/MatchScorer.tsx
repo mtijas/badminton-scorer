@@ -98,17 +98,19 @@ function LiveMatch({
           </article>
         ))}
       </section>
-      <button
-        disabled={match.pointHistory.length === 0 || isUpdatingScore}
-        onClick={() => {
-          void onUndoLastPoint();
-        }}
-      >
-        Undo last point
-      </button>
-      {match.status === "complete" && (
-        <button onClick={onNewMatch}>New match</button>
-      )}
+      <div className="match-actions">
+        <button
+          disabled={match.pointHistory.length === 0 || isUpdatingScore}
+          onClick={() => {
+            void onUndoLastPoint();
+          }}
+        >
+          Undo last point
+        </button>
+        {match.status === "complete" && (
+          <button onClick={onNewMatch}>New match</button>
+        )}
+      </div>
       {previousGames.length > 0 && (
         <div className="game-history">
           <h2>Previous games</h2>

@@ -25,7 +25,7 @@ export function MatchSetup({ error, onStart }: MatchSetupProps): ReactElement {
   return (
     <main className="setup">
       <h1>Badminton Scorer</h1>
-      <form onSubmit={handleSubmit}>
+      <form className="match-setup-form" onSubmit={handleSubmit}>
         <label>
           Home player
           <input
