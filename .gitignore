@@ -1,1 +1,7 @@
-# Populate with language, package-manager, environment, and editor ignores when tooling is selected.
+node_modules/
+.pnpm-store/
+dist/
+coverage/
+.env
+.env.local
+.DS_Store
