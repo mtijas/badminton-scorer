@@ -4,6 +4,7 @@ import {
   gameWinner,
   gamesWon,
   matchWinner,
+  previousCompletedGames,
   recordPoint,
   recordRally,
   undoRally,
@@ -77,6 +78,24 @@ describe("badminton scoring", () => {
 
     // Assert
     expect(won).toEqual({ home: 1, away: 1 });
+  });
+
+  it("returns completed games that preceded the current game", () => {
+    // Arrange
+    const games = [
+      { home: 21, away: 18 },
+      { home: 15, away: 21 },
+      { home: 4, away: 3 },
+    ];
+
+    // Act
+    const completedGames = previousCompletedGames(games);
+
+    // Assert
+    expect(completedGames).toEqual([
+      { home: 21, away: 18 },
+      { home: 15, away: 21 },
+    ]);
   });
 
   it("rejects points after match completion", () => {

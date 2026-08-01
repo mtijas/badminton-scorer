@@ -82,6 +82,26 @@ describe("match scoring workflow", () => {
     expect(screen.getByText("1", { selector: "strong" })).toBeTruthy();
   });
 
+  it("shows scores from completed games before the current game", async () => {
+    // Arrange
+    const matchWithPreviousGame: MatchState = {
+      ...startingMatch,
+      games: [
+        { home: 21, away: 18 },
+        { home: 4, away: 3 },
+      ],
+    };
+    vi.mocked(createMatch).mockResolvedValue(matchWithPreviousGame);
+    render(<App />);
+
+    // Act
+    fireEvent.click(screen.getByRole("button", { name: "Start match" }));
+
+    // Assert
+    await screen.findByRole("heading", { name: "Previous games" });
+    expect(screen.getByText("Game 1: 21–18")).toBeTruthy();
+  });
+
   it("undoes the latest point from the visible scoring controls", async () => {
     // Arrange
     const matchAfterPoint: MatchState = {

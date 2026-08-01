@@ -1,5 +1,10 @@
 import { type ReactElement } from "react";
-import { gamesWon, type MatchState, type Side } from "@badminton-scorer/shared";
+import {
+  gamesWon,
+  previousCompletedGames,
+  type MatchState,
+  type Side,
+} from "@badminton-scorer/shared";
 import { MatchSetup } from "../matches/MatchSetup.js";
 import { useMatchScoring } from "./useMatchScoring.js";
 
@@ -42,6 +47,7 @@ function LiveMatch({
   const winnerName =
     match.winner === "home" ? match.homePlayer : match.awayPlayer;
   const won = gamesWon(match.games);
+  const previousGames = previousCompletedGames(match.games);
   return (
     <main className="scoreboard">
       <p>Game {match.games.length} · Best of 3</p>
@@ -74,6 +80,18 @@ function LiveMatch({
       >
         Undo last point
       </button>
+      {previousGames.length > 0 && (
+        <div className="game-history">
+          <h2>Previous games</h2>
+          <ol>
+            {previousGames.map((game, index) => (
+              <li key={index}>
+                Game {index + 1}: {game.home}–{game.away}
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
       {error && <p role="alert">{error}</p>}
     </main>
   );

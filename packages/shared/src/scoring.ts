@@ -30,6 +30,12 @@ export function gamesWon(games: readonly GameScore[]): GamesWon {
   return won;
 }
 
+export function previousCompletedGames(
+  games: readonly GameScore[],
+): GameScore[] {
+  return games.slice(0, -1).filter((game) => gameWinner(game) !== null);
+}
+
 export function recordPoint(
   games: readonly GameScore[],
   side: Side,
