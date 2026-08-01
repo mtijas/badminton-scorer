@@ -21,4 +21,12 @@ describe("badminton scoring", () => {
   it("declares a best-of-three match winner", () => {
     expect(matchWinner([{ home: 21, away: 18 }, { home: 15, away: 21 }, { home: 21, away: 19 }])).toBe("home");
   });
+
+  it("rejects points after match completion", () => {
+    const completedMatch = [{ home: 21, away: 18 }, { home: 21, away: 16 }];
+
+    expect(() => recordPoint(completedMatch, "away")).toThrow(
+      "A completed match cannot receive more points."
+    );
+  });
 });

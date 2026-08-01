@@ -26,6 +26,7 @@ The web client runs at `http://localhost:5173` and the API at `http://localhost:
 
 ```sh
 pnpm dev     # start API and web client together
+pnpm typecheck # type-check all workspaces without generating output
 pnpm build   # type-check and build deployable apps
 pnpm test    # run shared scoring-rule tests
 pnpm lint    # lint all JavaScript and TypeScript files

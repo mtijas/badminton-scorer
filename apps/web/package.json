@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "pnpm --filter @badminton-scorer/shared build && vite --host 0.0.0.0",
     "build": "pnpm --filter @badminton-scorer/shared build && tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
     "preview": "vite preview"
   },
   "dependencies": {

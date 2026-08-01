@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "pnpm --filter @badminton-scorer/shared build && tsx watch src/server.ts",
     "build": "pnpm --filter @badminton-scorer/shared build && tsc --project tsconfig.json",
+    "typecheck": "tsc --noEmit --project tsconfig.json",
     "start": "node dist/server.js"
   },
   "dependencies": {
