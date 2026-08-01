@@ -1,0 +1,15 @@
+{
+  "name": "badminton-scorer",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0"
+  }
+}
