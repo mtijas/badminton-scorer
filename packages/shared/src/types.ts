@@ -5,6 +5,13 @@ export interface GameScore {
   away: number;
 }
 
+export interface ScoringState {
+  initialServer: Side;
+  servingSide: Side;
+  games: GameScore[];
+  pointHistory: Side[];
+}
+
 export interface MatchState {
   id: string;
   homePlayer: string;

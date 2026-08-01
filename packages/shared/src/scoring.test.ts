@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { gameWinner, matchWinner, recordPoint } from "./scoring.js";
+import { createScoringState, gameWinner, matchWinner, recordPoint, recordRally, undoRally } from "./scoring.js";
 
 describe("badminton scoring", () => {
   it("requires a two-point lead after 20-all", () => {
@@ -28,5 +28,29 @@ describe("badminton scoring", () => {
     expect(() => recordPoint(completedMatch, "away")).toThrow(
       "A completed match cannot receive more points."
     );
+  });
+
+  it("changes service to the rally winner", () => {
+    const state = createScoringState("home");
+
+    const updatedState = recordRally(state, "away");
+
+    expect(updatedState.servingSide).toBe("away");
+    expect(updatedState.games).toEqual([{ home: 0, away: 1 }]);
+  });
+
+  it("undoes the latest rally and restores the prior server", () => {
+    const initialState = createScoringState("home");
+    const stateAfterRally = recordRally(initialState, "away");
+
+    const revertedState = undoRally(stateAfterRally);
+
+    expect(revertedState).toEqual(initialState);
+  });
+
+  it("rejects undo when no rallies have been recorded", () => {
+    const state = createScoringState("home");
+
+    expect(() => undoRally(state)).toThrow("There is no point to undo.");
   });
 });

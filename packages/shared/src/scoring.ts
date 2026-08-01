@@ -1,4 +1,4 @@
-import type { GameScore, Side } from "./types.js";
+import type { GameScore, ScoringState, Side } from "./types.js";
 
 export const POINTS_TO_WIN_GAME = 21;
 export const MAX_GAME_POINTS = 30;
@@ -34,4 +34,34 @@ export function recordPoint(games: GameScore[], side: Side): GameScore[] {
     return [...games, { home: side === "home" ? 1 : 0, away: side === "away" ? 1 : 0 }];
   }
   return [...games.slice(0, -1), { ...current, [side]: current[side] + 1 }];
+}
+
+export function createScoringState(initialServer: Side): ScoringState {
+  return {
+    initialServer,
+    servingSide: initialServer,
+    games: [{ home: 0, away: 0 }],
+    pointHistory: []
+  };
+}
+
+export function recordRally(state: ScoringState, rallyWinner: Side): ScoringState {
+  return {
+    initialServer: state.initialServer,
+    servingSide: rallyWinner,
+    games: recordPoint(state.games, rallyWinner),
+    pointHistory: [...state.pointHistory, rallyWinner]
+  };
+}
+
+export function undoRally(state: ScoringState): ScoringState {
+  if (state.pointHistory.length === 0) {
+    throw new Error("There is no point to undo.");
+  }
+
+  return replayRallies(state.initialServer, state.pointHistory.slice(0, -1));
+}
+
+function replayRallies(initialServer: Side, pointHistory: Side[]): ScoringState {
+  return pointHistory.reduce(recordRally, createScoringState(initialServer));
 }
