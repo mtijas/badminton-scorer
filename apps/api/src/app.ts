@@ -1,6 +1,6 @@
 import cors from "@fastify/cors";
 import Fastify, { type FastifyInstance } from "fastify";
-import { matchWinner, recordPoint, type MatchState, type Side } from "@badminton-scorer/shared";
+import { createScoringState, matchWinner, recordRally, type MatchState, type Side } from "@badminton-scorer/shared";
 
 const matches = new Map<string, MatchState>();
 
@@ -16,11 +16,12 @@ export async function buildApp(): Promise<FastifyInstance> {
       return reply.code(400).send({ error: "Both player names are required." });
     }
 
+    const scoringState = createScoringState("home");
     const match: MatchState = {
       id: crypto.randomUUID(),
       homePlayer: homePlayer.trim(),
       awayPlayer: awayPlayer.trim(),
-      games: [{ home: 0, away: 0 }],
+      ...scoringState,
       status: "in_progress",
       winner: null
     };
@@ -41,9 +42,9 @@ export async function buildApp(): Promise<FastifyInstance> {
     }
     if (match.status === "complete") return reply.code(409).send({ error: "Match is already complete." });
 
-    const games = recordPoint(match.games, request.body.side);
-    const winner = matchWinner(games);
-    const updated: MatchState = { ...match, games, winner, status: winner ? "complete" : "in_progress" };
+    const scoringState = recordRally(match, request.body.side);
+    const winner = matchWinner(scoringState.games);
+    const updated: MatchState = { ...match, ...scoringState, winner, status: winner ? "complete" : "in_progress" };
     matches.set(match.id, updated);
     return updated;
   });

@@ -12,11 +12,10 @@ export interface ScoringState {
   readonly pointHistory: readonly Side[];
 }
 
-export interface MatchState {
+export interface MatchState extends ScoringState {
   id: string;
   homePlayer: string;
   awayPlayer: string;
-  games: readonly GameScore[];
   status: "in_progress" | "complete";
   winner: Side | null;
 }

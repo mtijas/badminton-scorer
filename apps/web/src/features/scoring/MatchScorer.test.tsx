@@ -15,7 +15,10 @@ const startingMatch: MatchState = {
   id: "match-1",
   homePlayer: "Aino",
   awayPlayer: "Kai",
+  initialServer: "home",
+  servingSide: "home",
   games: [{ home: 0, away: 0 }],
+  pointHistory: [],
   status: "in_progress",
   winner: null
 };

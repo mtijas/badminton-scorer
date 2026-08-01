@@ -18,7 +18,7 @@ Request:
 { "homePlayer": "Aino", "awayPlayer": "Kai" }
 ```
 
-Returns `201` with a match object. Player names are required and have a maximum length of 80 characters.
+Returns `201` with a match object. Player names are required and have a maximum length of 80 characters. The home player serves first.
 
 ## `GET /matches/:id`
 
@@ -43,8 +43,13 @@ Request:
   "id": "uuid",
   "homePlayer": "Aino",
   "awayPlayer": "Kai",
+  "initialServer": "home",
+  "servingSide": "away",
   "games": [{ "home": 21, "away": 18 }],
+  "pointHistory": ["home", "away", "away"],
   "status": "in_progress",
   "winner": null
 }
 ```
+
+`servingSide` is the side that serves the next rally. `pointHistory` lists the side that won each recorded rally in order; together with `initialServer`, it supports deterministic score replay and undo.
