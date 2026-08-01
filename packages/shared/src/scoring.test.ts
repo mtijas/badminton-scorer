@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   createScoringState,
   gameWinner,
+  gamesWon,
   matchWinner,
   recordPoint,
   recordRally,
@@ -61,6 +62,21 @@ describe("badminton scoring", () => {
 
     // Assert
     expect(winner).toBe("home");
+  });
+
+  it("counts completed games won by each side", () => {
+    // Arrange
+    const games = [
+      { home: 21, away: 18 },
+      { home: 15, away: 21 },
+      { home: 8, away: 6 },
+    ];
+
+    // Act
+    const won = gamesWon(games);
+
+    // Assert
+    expect(won).toEqual({ home: 1, away: 1 });
   });
 
   it("rejects points after match completion", () => {

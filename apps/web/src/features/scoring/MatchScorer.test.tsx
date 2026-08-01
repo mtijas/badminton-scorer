@@ -10,11 +10,12 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { MatchState } from "@badminton-scorer/shared";
 import { App } from "../../App.js";
-import { createMatch, recordPoint } from "../../services/matches.js";
+import { createMatch, recordPoint, undoPoint } from "../../services/matches.js";
 
 vi.mock("../../services/matches.js", () => ({
   createMatch: vi.fn(),
   recordPoint: vi.fn(),
+  undoPoint: vi.fn(),
 }));
 
 const startingMatch: MatchState = {
@@ -57,6 +58,7 @@ describe("match scoring workflow", () => {
     expect(createMatch).toHaveBeenCalledWith("Aino", "Kai");
     expect(screen.getByRole("heading", { name: "Aino" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Kai" })).toBeTruthy();
+    expect(screen.getAllByText("Games won: 0")).toHaveLength(2);
   });
 
   it("updates the visible score after a player receives a point", async () => {
@@ -78,5 +80,29 @@ describe("match scoring workflow", () => {
       expect(recordPoint).toHaveBeenCalledWith("match-1", "home"),
     );
     expect(screen.getByText("1", { selector: "strong" })).toBeTruthy();
+  });
+
+  it("undoes the latest point from the visible scoring controls", async () => {
+    // Arrange
+    const matchAfterPoint: MatchState = {
+      ...startingMatch,
+      games: [{ home: 1, away: 0 }],
+      pointHistory: ["home"],
+    };
+    vi.mocked(createMatch).mockResolvedValue(startingMatch);
+    vi.mocked(recordPoint).mockResolvedValue(matchAfterPoint);
+    vi.mocked(undoPoint).mockResolvedValue(startingMatch);
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: "Start match" }));
+    await screen.findByRole("heading", { name: "Live match" });
+    fireEvent.click(screen.getByRole("button", { name: "Add point for Aino" }));
+    await screen.findByText("1", { selector: "strong" });
+
+    // Act
+    fireEvent.click(screen.getByRole("button", { name: "Undo last point" }));
+
+    // Assert
+    await waitFor(() => expect(undoPoint).toHaveBeenCalledWith("match-1"));
+    expect(screen.getAllByText("0", { selector: "strong" })).toHaveLength(2);
   });
 });

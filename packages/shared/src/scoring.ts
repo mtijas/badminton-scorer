@@ -1,4 +1,4 @@
-import type { GameScore, ScoringState, Side } from "./types.js";
+import type { GameScore, GamesWon, ScoringState, Side } from "./types.js";
 
 export const POINTS_TO_WIN_GAME = 21;
 export const MAX_GAME_POINTS = 30;
@@ -15,14 +15,19 @@ export function gameWinner(score: GameScore): Side | null {
 }
 
 export function matchWinner(games: readonly GameScore[]): Side | null {
+  const won = gamesWon(games);
+  if (won.home >= GAMES_TO_WIN_MATCH) return "home";
+  if (won.away >= GAMES_TO_WIN_MATCH) return "away";
+  return null;
+}
+
+export function gamesWon(games: readonly GameScore[]): GamesWon {
   const won = { home: 0, away: 0 };
   for (const game of games) {
     const winner = gameWinner(game);
     if (winner) won[winner] += 1;
   }
-  if (won.home >= GAMES_TO_WIN_MATCH) return "home";
-  if (won.away >= GAMES_TO_WIN_MATCH) return "away";
-  return null;
+  return won;
 }
 
 export function recordPoint(

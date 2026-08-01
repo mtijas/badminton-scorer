@@ -5,6 +5,11 @@ export interface GameScore {
   readonly away: number;
 }
 
+export interface GamesWon {
+  readonly home: number;
+  readonly away: number;
+}
+
 export interface ScoringState {
   readonly initialServer: Side;
   readonly servingSide: Side;

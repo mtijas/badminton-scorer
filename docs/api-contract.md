@@ -36,6 +36,10 @@ Request:
 
 `side` must be `home` or `away`. A completed match returns `409`.
 
+## `POST /matches/:id/undo`
+
+Removes the latest recorded point and returns the updated match object. This endpoint has no request body. It returns `404` when no match exists and `409` when there is no point to undo.
+
 ### Match object
 
 ```json

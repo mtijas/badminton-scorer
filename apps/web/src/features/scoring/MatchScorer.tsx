@@ -1,22 +1,36 @@
 import { type ReactElement } from "react";
-import type { MatchState, Side } from "@badminton-scorer/shared";
+import { gamesWon, type MatchState, type Side } from "@badminton-scorer/shared";
 import { MatchSetup } from "../matches/MatchSetup.js";
 import { useMatchScoring } from "./useMatchScoring.js";
 
 export function MatchScorer(): ReactElement {
-  const { match, error, startMatch, addPoint } = useMatchScoring();
+  const { match, error, startMatch, addPoint, undoLastPoint } =
+    useMatchScoring();
 
   if (!match) return <MatchSetup error={error} onStart={startMatch} />;
-  return <LiveMatch error={error} match={match} onAddPoint={addPoint} />;
+  return (
+    <LiveMatch
+      error={error}
+      match={match}
+      onAddPoint={addPoint}
+      onUndoLastPoint={undoLastPoint}
+    />
+  );
 }
 
 interface LiveMatchProps {
   readonly error: string | null;
   readonly match: MatchState;
   readonly onAddPoint: (side: Side) => Promise<void>;
+  readonly onUndoLastPoint: () => Promise<void>;
 }
 
-function LiveMatch({ error, match, onAddPoint }: LiveMatchProps): ReactElement {
+function LiveMatch({
+  error,
+  match,
+  onAddPoint,
+  onUndoLastPoint,
+}: LiveMatchProps): ReactElement {
   const score = match.games.at(-1);
   if (!score)
     return (
@@ -27,6 +41,7 @@ function LiveMatch({ error, match, onAddPoint }: LiveMatchProps): ReactElement {
 
   const winnerName =
     match.winner === "home" ? match.homePlayer : match.awayPlayer;
+  const won = gamesWon(match.games);
   return (
     <main className="scoreboard">
       <p>Game {match.games.length} · Best of 3</p>
@@ -38,6 +53,7 @@ function LiveMatch({ error, match, onAddPoint }: LiveMatchProps): ReactElement {
           <article key={side}>
             <h2>{match[`${side}Player`]}</h2>
             <strong>{score[side]}</strong>
+            <p>Games won: {won[side]}</p>
             <button
               aria-label={`Add point for ${match[`${side}Player`]}`}
               disabled={match.status === "complete"}
@@ -50,6 +66,14 @@ function LiveMatch({ error, match, onAddPoint }: LiveMatchProps): ReactElement {
           </article>
         ))}
       </section>
+      <button
+        disabled={match.pointHistory.length === 0}
+        onClick={() => {
+          void onUndoLastPoint();
+        }}
+      >
+        Undo last point
+      </button>
       {error && <p role="alert">{error}</p>}
     </main>
   );

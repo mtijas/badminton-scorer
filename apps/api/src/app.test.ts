@@ -36,4 +36,34 @@ describe("match API", () => {
     expect(updatedMatch.games).toEqual([{ home: 0, away: 1 }]);
     expect(updatedMatch.pointHistory).toEqual(["away"]);
   });
+
+  it("undoes the latest point and restores the previous scoring state", async () => {
+    // Arrange
+    const app = await buildApp();
+    apps.push(app);
+    const createResponse = await app.inject({
+      method: "POST",
+      url: "/matches",
+      payload: { homePlayer: "Aino", awayPlayer: "Kai" },
+    });
+    const match = createResponse.json<MatchState>();
+    await app.inject({
+      method: "POST",
+      url: `/matches/${match.id}/points`,
+      payload: { side: "away" },
+    });
+
+    // Act
+    const undoResponse = await app.inject({
+      method: "POST",
+      url: `/matches/${match.id}/undo`,
+    });
+    const updatedMatch = undoResponse.json<MatchState>();
+
+    // Assert
+    expect(undoResponse.statusCode).toBe(200);
+    expect(updatedMatch.servingSide).toBe("home");
+    expect(updatedMatch.games).toEqual([{ home: 0, away: 0 }]);
+    expect(updatedMatch.pointHistory).toEqual([]);
+  });
 });

@@ -19,10 +19,18 @@ export async function recordPoint(id: string, side: Side): Promise<MatchState> {
   });
 }
 
+export async function undoPoint(id: string): Promise<MatchState> {
+  return request(`/matches/${id}/undo`, { method: "POST" });
+}
+
 async function request(path: string, init: RequestInit): Promise<MatchState> {
+  const headers =
+    init.body === undefined
+      ? undefined
+      : { "Content-Type": "application/json" };
   const response = await fetch(`${apiUrl}${path}`, {
     ...init,
-    headers: { "Content-Type": "application/json" },
+    headers,
   });
   if (!response.ok) {
     const payload = (await response.json()) as { error?: string };

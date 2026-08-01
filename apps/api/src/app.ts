@@ -4,6 +4,7 @@ import {
   createScoringState,
   matchWinner,
   recordRally,
+  undoRally,
   type MatchState,
   type Side,
 } from "@badminton-scorer/shared";
@@ -73,6 +74,33 @@ export async function buildApp(): Promise<FastifyInstance> {
       };
       matches.set(match.id, updated);
       return updated;
+    },
+  );
+
+  app.post<{ Params: { id: string } }>(
+    "/matches/:id/undo",
+    async (request, reply) => {
+      const match = matches.get(request.params.id);
+      if (!match) return reply.code(404).send({ error: "Match not found." });
+
+      try {
+        const scoringState = undoRally(match);
+        const winner = matchWinner(scoringState.games);
+        const updated: MatchState = {
+          ...match,
+          ...scoringState,
+          winner,
+          status: winner ? "complete" : "in_progress",
+        };
+        matches.set(match.id, updated);
+        return updated;
+      } catch (caught) {
+        const error =
+          caught instanceof Error
+            ? caught.message
+            : "Unable to undo the latest point.";
+        return reply.code(409).send({ error });
+      }
     },
   );
 
