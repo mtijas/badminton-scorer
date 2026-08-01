@@ -1,41 +1,47 @@
 # Scoring Rules
 
 ## Supported format
-- Standard best-of-three 3×21 format
-- Singles initially supported
-- Any unsupported variants explicitly listed
 
-## Match and game scoring
-- Rally-point scoring
-- 21-point target
-- Two-point lead from 20-all
-- 30-point cap
-- First side to two games wins
+This application currently implements the standard **BWF best-of-three (3×21)** badminton scoring system.
 
-## Serving
-- Toss determines initial choices
-- Rally winner serves next
-- Game winner serves first in next game
-- Even score: right court
-- Odd score: left court
+- The first side to win **two games** wins the match.
+- Other match formats are not currently supported.
+
+## Match start
+
+- Before the match, a toss determines which side serves first.
+- The scorer records the resulting initial serving side.
+
+## Rally scoring
+
+- Every rally awards **one point**.
+- The side that wins a rally scores a point and serves the next rally.
+
+## Winning a game
+
+- A game is won by reaching **21 points** with at least a **two-point lead**.
+- At **20–20**, play continues until one side leads by two points.
+- At **29–29**, the side reaching **30 points** wins the game.
 
 ## Game transitions
-- Next game begins at 0–0
-- Game-winning side serves first
-- Change-of-ends rules
 
-## Non-scoring events
-- Lets do not alter state
-- Operator determines officially awarded rally
-- Service-court-error correction policy
+- Recording the game-winning rally immediately completes the current game.
+- If the match is not complete, the next game starts immediately at **0–0**.
+- The side that won the previous game serves first in the next game.
 
-## Scorer behaviour
-- Undo
-- Invalid action rejection
-- Match completion handling
+## Winning the match
 
-## Unsupported rules
-- Doubles player order, if not implemented
-- Handicap and alternative formats
-- Retirement, walkover and disqualification
-- 3×15 rules effective 4 January 2027
+- The first side to win **two games** wins the match.
+- Once the match is complete, additional scoring is rejected.
+
+## Undo
+
+- Undo removes only the most recently recorded point-awarding rally.
+- Undo restores the score, serving side, and game state immediately preceding that rally.
+- Undo is rejected if no recorded rallies exist.
+
+## Scorer behavior
+
+- The scorer records only the side officially awarded each rally.
+- Lets, faults, and line decisions are determined outside the application.
+- Only point-awarding rallies are stored in rally history.
