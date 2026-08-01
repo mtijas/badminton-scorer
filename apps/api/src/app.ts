@@ -1,10 +1,10 @@
 import cors from "@fastify/cors";
-import Fastify from "fastify";
+import Fastify, { type FastifyInstance } from "fastify";
 import { matchWinner, recordPoint, type MatchState, type Side } from "@badminton-scorer/shared";
 
 const matches = new Map<string, MatchState>();
 
-export async function buildApp() {
+export async function buildApp(): Promise<FastifyInstance> {
   const app = Fastify({ logger: true });
   await app.register(cors, { origin: process.env.WEB_ORIGIN ?? "http://localhost:5173" });
 
