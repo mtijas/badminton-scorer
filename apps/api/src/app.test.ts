@@ -1,12 +1,18 @@
 import { afterEach, describe, expect, it } from "vitest";
 import type { FastifyInstance } from "fastify";
-import type { MatchState } from "@badminton-scorer/shared";
+import type { MatchState, Side } from "@badminton-scorer/shared";
 import { buildApp } from "./app.js";
 
 const whitespaceOnlyNameCases = [
   { player: "home", homePlayer: " \t ", awayPlayer: "Kai" },
   { player: "away", homePlayer: "Aino", awayPlayer: "\n " },
 ] as const;
+
+const homeGameWinningRallies = [
+  ...Array<Side>(20).fill("home"),
+  ...Array<Side>(15).fill("away"),
+  "home" as const,
+];
 
 describe("match API", () => {
   const apps: FastifyInstance[] = [];
@@ -107,6 +113,56 @@ describe("match API", () => {
     expect(response.json()).toEqual({ error: "Match not found." });
   });
 
+  it("rejects an invalid side when recording a point", async () => {
+    // Arrange
+    const app = await buildApp();
+    apps.push(app);
+    const createResponse = await app.inject({
+      method: "POST",
+      url: "/matches",
+      payload: { homePlayer: "Aino", awayPlayer: "Kai" },
+    });
+    const match = createResponse.json<MatchState>();
+
+    // Act
+    const response = await app.inject({
+      method: "POST",
+      url: `/matches/${match.id}/points`,
+      payload: { side: "visitor" },
+    });
+
+    // Assert
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({ error: "side must be home or away." });
+  });
+
+  it("rejects points recorded after match completion", async () => {
+    // Arrange
+    const app = await buildApp();
+    apps.push(app);
+    const createResponse = await app.inject({
+      method: "POST",
+      url: "/matches",
+      payload: { homePlayer: "Aino", awayPlayer: "Kai" },
+    });
+    const match = createResponse.json<MatchState>();
+    await recordRallies(app, match.id, [
+      ...homeGameWinningRallies,
+      ...homeGameWinningRallies,
+    ]);
+
+    // Act
+    const response = await app.inject({
+      method: "POST",
+      url: `/matches/${match.id}/points`,
+      payload: { side: "away" },
+    });
+
+    // Assert
+    expect(response.statusCode).toBe(409);
+    expect(response.json()).toEqual({ error: "Match is already complete." });
+  });
+
   it("undoes the latest point and restores the previous scoring state", async () => {
     // Arrange
     const app = await buildApp();
@@ -137,3 +193,18 @@ describe("match API", () => {
     expect(updatedMatch.pointHistory).toEqual([]);
   });
 });
+
+async function recordRallies(
+  app: FastifyInstance,
+  matchId: string,
+  rallyWinners: readonly Side[],
+): Promise<void> {
+  for (const side of rallyWinners) {
+    const response = await app.inject({
+      method: "POST",
+      url: `/matches/${matchId}/points`,
+      payload: { side },
+    });
+    expect(response.statusCode).toBe(200);
+  }
+}
