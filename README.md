@@ -55,7 +55,8 @@ pnpm exec playwright install chromium
 Copy `.env.example` to `.env` only when overriding the local defaults.
 
 The API requires PostgreSQL. Start it with `docker compose up -d database`, then
-run `pnpm db:migrate` before `pnpm dev`, `pnpm test:e2e`, or `pnpm check`.
+run `pnpm db:migrate` before `pnpm dev`. `pnpm test:e2e` applies pending migrations
+to its database automatically; set `E2E_DATABASE_URL` to target a different one.
 
 ## PostgreSQL integration tests
 

@@ -159,6 +159,78 @@ describeWithDatabase("PostgresMatchRepository", () => {
     ]);
   });
 
+  it("undoes across a game boundary after the next game's point is undone", async () => {
+    // Arrange
+    const app = await buildApp({
+      matchRepository: new PostgresMatchRepository(pool),
+    });
+    apps.push(app);
+    const createResponse = await app.inject({
+      method: "POST",
+      url: "/matches",
+      payload: {
+        homePlayer: "Aino",
+        awayPlayer: "Kai",
+        initialServer: "home",
+        scoringSystem: "3x15",
+      },
+    });
+    const match = createResponse.json<MatchState>();
+    for (let rally = 0; rally < 15; rally += 1) {
+      const response = await app.inject({
+        method: "POST",
+        url: `/matches/${match.id}/points`,
+        payload: { side: "home" },
+      });
+      expect(response.statusCode).toBe(200);
+    }
+    const nextGamePoint = await app.inject({
+      method: "POST",
+      url: `/matches/${match.id}/points`,
+      payload: { side: "away" },
+    });
+    expect(nextGamePoint.statusCode).toBe(200);
+    const undoNextGamePoint = await app.inject({
+      method: "POST",
+      url: `/matches/${match.id}/undo`,
+    });
+    expect(undoNextGamePoint.json<MatchState>().games).toEqual([
+      { home: 15, away: 0 },
+      { home: 0, away: 0 },
+    ]);
+
+    // Act
+    const undoWinningPoint = await app.inject({
+      method: "POST",
+      url: `/matches/${match.id}/undo`,
+    });
+    const eventReferences = await pool.query<{
+      readonly invalid_count: string;
+    }>(
+      `SELECT count(*) AS invalid_count
+       FROM score_events
+       LEFT JOIN games ON games.id = score_events.game_id
+       WHERE score_events.match_id = $1 AND games.id IS NULL`,
+      [match.id],
+    );
+    const retiredGame = await pool.query<{ readonly is_removed: boolean }>(
+      `SELECT is_removed
+       FROM games
+       WHERE match_id = $1 AND game_number = 2`,
+      [match.id],
+    );
+
+    // Assert
+    expect(undoWinningPoint.statusCode).toBe(200);
+    expect(undoWinningPoint.json<MatchState>()).toMatchObject({
+      games: [{ home: 14, away: 0 }],
+      status: "in_progress",
+      winner: null,
+    });
+    expect(eventReferences.rows).toEqual([{ invalid_count: "0" }]);
+    expect(retiredGame.rows).toEqual([{ is_removed: true }]);
+  });
+
   it("serializes concurrent point commands without losing either rally", async () => {
     // Arrange
     const app = await buildApp({

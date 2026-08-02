@@ -451,7 +451,26 @@ async function syncProjection(
   match: MatchState,
 ): Promise<void> {
   await client.query(
-    "DELETE FROM games WHERE match_id = $1 AND game_number > $2",
+    `UPDATE games
+     SET is_removed = true
+     WHERE match_id = $1
+       AND game_number > $2
+       AND EXISTS (
+         SELECT 1
+         FROM score_events
+         WHERE score_events.game_id = games.id
+       )`,
+    [match.id, match.games.length],
+  );
+  await client.query(
+    `DELETE FROM games
+     WHERE match_id = $1
+       AND game_number > $2
+       AND NOT EXISTS (
+         SELECT 1
+         FROM score_events
+         WHERE score_events.game_id = games.id
+       )`,
     [match.id, match.games.length],
   );
 
@@ -473,6 +492,7 @@ async function syncProjection(
          SET home_score = $3,
              away_score = $4,
              status = $5,
+             is_removed = false,
              winner = $6,
              completed_at = CASE
                WHEN $5::game_status = 'complete' THEN COALESCE(completed_at, current_timestamp)
@@ -483,8 +503,8 @@ async function syncProjection(
       );
     } else {
       await client.query(
-        `INSERT INTO games (match_id, game_number, home_score, away_score, status, winner, completed_at)
-         VALUES ($1, $2, $3, $4, $5, $6,
+        `INSERT INTO games (match_id, game_number, home_score, away_score, status, is_removed, winner, completed_at)
+         VALUES ($1, $2, $3, $4, $5, false, $6,
            CASE WHEN $5::game_status = 'complete' THEN current_timestamp END)`,
         [match.id, gameNumber, score.home, score.away, status, winner],
       );
