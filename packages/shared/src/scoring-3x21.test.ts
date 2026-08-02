@@ -173,6 +173,51 @@ describe("3x21 badminton scoring", () => {
     expect(endsChangeDue).toBe(false);
   });
 
+  it("does not require another ends change when the second side reaches 11", () => {
+    // Arrange
+    const games = [
+      { home: 21, away: 18 },
+      { home: 18, away: 21 },
+      { home: 11, away: 11 },
+    ];
+
+    // Act
+    const endsChangeDue = isEndsChangeDue(games, scoringSystem);
+
+    // Assert
+    expect(endsChangeDue).toBe(false);
+  });
+
+  it("does not require another ends change when the second side reaches 11 after the first side passes it", () => {
+    // Arrange
+    const games = [
+      { home: 21, away: 18 },
+      { home: 18, away: 21 },
+      { home: 12, away: 11 },
+    ];
+
+    // Act
+    const endsChangeDue = isEndsChangeDue(games, scoringSystem);
+
+    // Assert
+    expect(endsChangeDue).toBe(false);
+  });
+
+  it("does not require another ends change when home reaches 11 after away passes it", () => {
+    // Arrange
+    const games = [
+      { home: 21, away: 18 },
+      { home: 18, away: 21 },
+      { home: 11, away: 12 },
+    ];
+
+    // Act
+    const endsChangeDue = isEndsChangeDue(games, scoringSystem);
+
+    // Assert
+    expect(endsChangeDue).toBe(false);
+  });
+
   it("rejects points after match completion", () => {
     // Arrange
     const completedMatch = [

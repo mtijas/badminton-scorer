@@ -79,8 +79,10 @@ export function isEndsChangeDue(
   const { endsChangePoint } = scoringRules[scoringSystem];
   return (
     isDecidingGame &&
-    (currentGame.home === endsChangePoint ||
-      currentGame.away === endsChangePoint)
+    ((currentGame.home === endsChangePoint &&
+      currentGame.away < endsChangePoint) ||
+      (currentGame.away === endsChangePoint &&
+        currentGame.home < endsChangePoint))
   );
 }
 

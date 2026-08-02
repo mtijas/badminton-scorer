@@ -49,4 +49,49 @@ describe("3x15 badminton scoring", () => {
     // Assert
     expect(endsChangeDue).toBe(true);
   });
+
+  it("does not require another ends change when the second side reaches 8", () => {
+    // Arrange
+    const games = [
+      { home: 15, away: 12 },
+      { home: 12, away: 15 },
+      { home: 8, away: 8 },
+    ];
+
+    // Act
+    const endsChangeDue = isEndsChangeDue(games, scoringSystem);
+
+    // Assert
+    expect(endsChangeDue).toBe(false);
+  });
+
+  it("does not require another ends change when the second side reaches 8 after the first side passes it", () => {
+    // Arrange
+    const games = [
+      { home: 15, away: 12 },
+      { home: 12, away: 15 },
+      { home: 9, away: 8 },
+    ];
+
+    // Act
+    const endsChangeDue = isEndsChangeDue(games, scoringSystem);
+
+    // Assert
+    expect(endsChangeDue).toBe(false);
+  });
+
+  it("does not require another ends change when home reaches 8 after away passes it", () => {
+    // Arrange
+    const games = [
+      { home: 15, away: 12 },
+      { home: 12, away: 15 },
+      { home: 8, away: 9 },
+    ];
+
+    // Act
+    const endsChangeDue = isEndsChangeDue(games, scoringSystem);
+
+    // Assert
+    expect(endsChangeDue).toBe(false);
+  });
 });
