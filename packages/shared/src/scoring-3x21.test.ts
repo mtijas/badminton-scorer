@@ -14,7 +14,7 @@ import type { Side } from "./types.js";
 
 const scoringSystem = "3x21" as const;
 
-describe("badminton scoring", () => {
+describe("3x21 badminton scoring", () => {
   it("requires a two-point lead after 20-all", () => {
     // Arrange
     const onePointLead = { home: 21, away: 20 };
@@ -38,37 +38,6 @@ describe("badminton scoring", () => {
 
     // Assert
     expect(winner).toBe("home");
-  });
-
-  it("uses 15 points with a 21-point cap for the 3x15 system", () => {
-    // Arrange
-    const onePointLead = { home: 15, away: 14 };
-    const twoPointLead = { home: 16, away: 14 };
-    const cappedGame = { home: 21, away: 20 };
-
-    // Act
-    const winnerWithOnePointLead = gameWinner(onePointLead, "3x15");
-    const winnerWithTwoPointLead = gameWinner(twoPointLead, "3x15");
-    const winnerAtCap = gameWinner(cappedGame, "3x15");
-
-    // Assert
-    expect(winnerWithOnePointLead).toBeNull();
-    expect(winnerWithTwoPointLead).toBe("home");
-    expect(winnerAtCap).toBe("home");
-  });
-
-  it("starts the next 3x15 game after the fifteenth point", () => {
-    // Arrange
-    const gamePoint = [{ home: 14, away: 9 }];
-
-    // Act
-    const games = recordPoint(gamePoint, "home", "3x15");
-
-    // Assert
-    expect(games).toEqual([
-      { home: 15, away: 9 },
-      { home: 0, away: 0 },
-    ]);
   });
 
   it("starts the next game as soon as the game-winning point is recorded", () => {
@@ -174,26 +143,20 @@ describe("badminton scoring", () => {
     expect(endsChangeAfterCompleteMatch).toBe(false);
   });
 
-  it.each([
-    ["3x21", 11],
-    ["3x15", 8],
-  ] as const)(
-    "requires an ends change in the deciding %s game after %i points",
-    (format, endsChangePoint) => {
-      // Arrange
-      const games = [
-        { home: format === "3x21" ? 21 : 15, away: 12 },
-        { home: 12, away: format === "3x21" ? 21 : 15 },
-        { home: endsChangePoint, away: 6 },
-      ];
+  it("requires an ends change after 11 points in the deciding game", () => {
+    // Arrange
+    const games = [
+      { home: 21, away: 12 },
+      { home: 12, away: 21 },
+      { home: 11, away: 6 },
+    ];
 
-      // Act
-      const endsChangeDue = isEndsChangeDue(games, format);
+    // Act
+    const endsChangeDue = isEndsChangeDue(games, scoringSystem);
 
-      // Assert
-      expect(endsChangeDue).toBe(true);
-    },
-  );
+    // Assert
+    expect(endsChangeDue).toBe(true);
+  });
 
   it("does not require an ends change before the deciding-game threshold", () => {
     // Arrange
