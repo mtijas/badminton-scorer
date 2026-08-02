@@ -1,5 +1,10 @@
 # Badminton Scorer — Agent Guide
 
+## Ralph Loop
+
+When running a Ralph Wiggum loop, also read `.specify/memory/constitution.md`.
+This guide remains authoritative for repository-specific engineering rules.
+
 ## Scope
 
 This repository contains a React web client and Node.js API for recording badminton matches and presenting their live score.
