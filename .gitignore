@@ -7,3 +7,8 @@ test-results/
 .env
 .env.local
 .DS_Store
+
+# Ralph Wiggum runtime output
+logs/
+PROMPT_build.md
+PROMPT_plan.md
