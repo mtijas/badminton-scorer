@@ -69,8 +69,8 @@ Document the canonical development, test, lint, and Docker commands in `README.m
 
 Dependencies should flow in this direction:
 
-- UI 
-  - application services 
+- UI
+  - application services
     - scoring domain
     - persistence
 
