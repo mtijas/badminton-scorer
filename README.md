@@ -9,7 +9,7 @@ The initial product scope is players, matches, point recording, game/match winne
 - React + Vite web client
 - Fastify API
 - TypeScript shared scoring domain
-- In-memory match store for the first vertical slice (persistence is deliberately not selected yet)
+- PostgreSQL schema with forward-only migrations; the API still uses in-memory storage until the repository migration
 
 ## Getting started
 
@@ -39,6 +39,7 @@ pnpm build   # type-check and build deployable apps
 pnpm test    # run shared scoring-rule tests
 pnpm test:e2e # run the Playwright browser scoring smoke test
 pnpm lint    # lint all JavaScript and TypeScript files
+pnpm db:migrate # apply forward-only PostgreSQL migrations (requires DATABASE_URL)
 ```
 
 Install the Chromium browser once before running the browser test locally:
@@ -48,3 +49,7 @@ pnpm exec playwright install chromium
 ```
 
 Copy `.env.example` to `.env` only when overriding the local defaults.
+
+Start PostgreSQL with `docker compose up -d database`, then run `pnpm db:migrate`
+to initialise a local database. The API continues using in-memory storage until
+the PostgreSQL repository is introduced.

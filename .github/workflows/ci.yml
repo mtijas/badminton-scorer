@@ -11,6 +11,18 @@ jobs:
   check:
     name: Quality check
     runs-on: ubuntu-latest
+    services:
+      database:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: badminton_scorer
+          POSTGRES_USER: badminton
+          POSTGRES_PASSWORD: badminton
+        options: >-
+          --health-cmd "pg_isready -U badminton -d badminton_scorer"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v6
@@ -23,3 +35,6 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm check
+      - run: pnpm db:migrate
+        env:
+          DATABASE_URL: postgres://badminton:badminton@localhost:5432/badminton_scorer

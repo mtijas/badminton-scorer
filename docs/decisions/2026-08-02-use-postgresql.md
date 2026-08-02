@@ -1,7 +1,7 @@
 # ADR: Select PostgreSQL as the application database
 
-* Status: Accepted
-* Date: 2026-08-02
+- Status: Accepted
+- Date: 2026-08-02
 
 ## Context
 
@@ -15,17 +15,17 @@ The database must support transactional updates so that recording a point, updat
 
 ## Decision
 
-* Use PostgreSQL as the primary application database.
-* Store core application entities in relational tables with explicit foreign-key relationships.
-* Use database constraints to enforce data integrity where practical, including foreign keys, unique constraints, non-null constraints, and check constraints.
-* Store individual scoring actions as immutable or append-only score events instead of storing only the latest score.
-* Treat score events as the authoritative match history.
-* Allow corrections through explicit correction or reversal events rather than silently deleting historical events.
-* Use database transactions when a command changes multiple related records.
-* Access PostgreSQL through repository interfaces so scoring rules and application services do not depend directly on database-specific implementation details.
-* Manage schema changes through version-controlled, forward-only migrations.
-* Use PostgreSQL `jsonb` only for genuinely flexible metadata or configuration. Core match and scoring data must remain relational.
-* Replace the initial in-memory match repository with PostgreSQL persistence before production use.
+- Use PostgreSQL as the primary application database.
+- Store core application entities in relational tables with explicit foreign-key relationships.
+- Use database constraints to enforce data integrity where practical, including foreign keys, unique constraints, non-null constraints, and check constraints.
+- Store individual scoring actions as immutable or append-only score events instead of storing only the latest score.
+- Treat score events as the authoritative match history.
+- Allow corrections through explicit correction or reversal events rather than silently deleting historical events.
+- Use database transactions when a command changes multiple related records.
+- Access PostgreSQL through repository interfaces so scoring rules and application services do not depend directly on database-specific implementation details.
+- Manage schema changes through version-controlled, forward-only migrations.
+- Use PostgreSQL `jsonb` only for genuinely flexible metadata or configuration. Core match and scoring data must remain relational.
+- Replace the initial in-memory match repository with PostgreSQL persistence before production use.
 
 ## Consequences
 
