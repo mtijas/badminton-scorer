@@ -58,10 +58,10 @@ testable acceptance criteria, then run the Codex loop:
 ./scripts/ralph-loop-codex.sh plan # create/update IMPLEMENTATION_PLAN.md only
 ```
 
-The loop runs Codex with its approvals and sandbox bypassed, and agents commit
-and push completed work automatically. Review the specification and current
-working tree before starting it. The project rules are in `AGENTS.md`; Ralph
-settings and completion-log requirements are in
+The loop keeps normal Codex approvals and sandbox protections, and it leaves
+changes uncommitted and unpushed for human review. Review the specification and
+current working tree before starting it. The project rules are in `AGENTS.md`;
+Ralph settings and completion-log requirements are in
 `.specify/memory/constitution.md`.
 
 Install the Chromium browser once before running the browser test locally:
