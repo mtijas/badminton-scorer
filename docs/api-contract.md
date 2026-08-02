@@ -41,9 +41,17 @@ Request:
 
 `side` must be `home` or `away`. A completed match returns `409`.
 
+The request must include an `Idempotency-Key` header containing a UUID. Reuse
+the same key only when retrying the same point command. A successful retry
+returns the original match result without recording another rally.
+
 ## `POST /matches/:id/undo`
 
 Removes the latest recorded point and returns the updated match object. This endpoint has no request body. It returns `404` when no match exists and `409` when there is no point to undo.
+
+The request must include an `Idempotency-Key` header containing a UUID. A retry
+with the same key returns the original undo result and does not append another
+reversal event.
 
 ### Match object
 

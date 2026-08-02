@@ -76,10 +76,17 @@ export async function buildApp({
       if (request.body?.side !== "home" && request.body?.side !== "away") {
         return reply.code(400).send({ error: "side must be home or away." });
       }
+      const commandId = readCommandId(request.headers["idempotency-key"]);
+      if (!commandId) {
+        return reply.code(400).send({
+          error: "Idempotency-Key must be a UUID.",
+        });
+      }
       try {
         const updated = await matchRepository.recordPoint(
           request.params.id,
           request.body.side,
+          commandId,
         );
         return updated
           ? updated
@@ -97,9 +104,16 @@ export async function buildApp({
   app.post<{ Params: { id: string } }>(
     "/matches/:id/undo",
     async (request, reply) => {
+      const commandId = readCommandId(request.headers["idempotency-key"]);
+      if (!commandId) {
+        return reply.code(400).send({
+          error: "Idempotency-Key must be a UUID.",
+        });
+      }
       try {
         const updated = await matchRepository.undoLatestRally(
           request.params.id,
+          commandId,
         );
         return updated
           ? updated
@@ -122,5 +136,18 @@ function isPlayerName(value: unknown): value is string {
     typeof value === "string" &&
     value.trim().length > 0 &&
     value.trim().length <= 80
+  );
+}
+
+function readCommandId(
+  value: string | string[] | undefined,
+): string | undefined {
+  if (typeof value !== "string") return undefined;
+  return isUuid(value) ? value : undefined;
+}
+
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value,
   );
 }

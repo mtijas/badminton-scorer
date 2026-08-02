@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { MatchState } from "@badminton-scorer/shared";
-import { createMatch, undoPoint } from "./matches.js";
+import { createMatch, recordPoint, undoPoint } from "./matches.js";
 
 const match: MatchState = {
   id: "match-1",
@@ -54,7 +54,7 @@ describe("match service", () => {
     expect(result).toEqual(awayServerMatch);
   });
 
-  it("sends a bodyless undo request without a JSON content type", async () => {
+  it("sends an idempotency key with a bodyless undo request", async () => {
     // Arrange
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(JSON.stringify(match), {
@@ -70,9 +70,39 @@ describe("match service", () => {
     // Assert
     expect(fetchMock).toHaveBeenCalledWith(
       "http://localhost:3000/matches/match-1/undo",
-      { method: "POST", headers: undefined },
+      {
+        method: "POST",
+        headers: { "Idempotency-Key": expect.any(String) },
+      },
     );
     expect(result).toEqual(match);
+  });
+
+  it("sends an idempotency key when recording a point", async () => {
+    // Arrange
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(match), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    // Act
+    await recordPoint(match.id, "home");
+
+    // Assert
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:3000/matches/match-1/points",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": expect.any(String),
+        },
+        body: JSON.stringify({ side: "home" }),
+      },
+    );
   });
 
   it("reports a clear message when the scoring API cannot be reached", async () => {

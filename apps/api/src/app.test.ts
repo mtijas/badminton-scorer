@@ -38,9 +38,25 @@ const homeGameWinningRallies = [
 function buildApp({
   matchRepository,
 }: BuildAppOptions = {}): Promise<FastifyInstance> {
-  return buildApplication({
+  return buildTestApp({
     matchRepository: matchRepository ?? new InMemoryMatchRepository(),
   });
+}
+
+async function buildTestApp(
+  options: BuildAppOptions,
+): Promise<FastifyInstance> {
+  const app = await buildApplication(options);
+  app.addHook("onRequest", async (request) => {
+    if (
+      request.method === "POST" &&
+      (/\/points$/.test(request.url) || /\/undo$/.test(request.url)) &&
+      request.headers["idempotency-key"] === undefined
+    ) {
+      request.headers["idempotency-key"] = crypto.randomUUID();
+    }
+  });
+  return app;
 }
 
 describe("match API", () => {

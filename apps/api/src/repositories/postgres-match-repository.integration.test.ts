@@ -2,11 +2,25 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { Pool } from "pg";
 import type { FastifyInstance } from "fastify";
 import type { MatchState } from "@badminton-scorer/shared";
-import { buildApp } from "../app.js";
+import { buildApp as buildApplication, type BuildAppOptions } from "../app.js";
 import { PostgresMatchRepository } from "./postgres-match-repository.js";
 
 const databaseUrl = process.env.DATABASE_URL;
 const describeWithDatabase = databaseUrl ? describe : describe.skip;
+
+async function buildApp(options: BuildAppOptions): Promise<FastifyInstance> {
+  const app = await buildApplication(options);
+  app.addHook("onRequest", async (request) => {
+    if (
+      request.method === "POST" &&
+      (/\/points$/.test(request.url) || /\/undo$/.test(request.url)) &&
+      request.headers["idempotency-key"] === undefined
+    ) {
+      request.headers["idempotency-key"] = crypto.randomUUID();
+    }
+  });
+  return app;
+}
 
 describeWithDatabase("PostgresMatchRepository", () => {
   const pool = new Pool({ connectionString: databaseUrl });
@@ -304,5 +318,129 @@ describeWithDatabase("PostgresMatchRepository", () => {
 
     // Assert
     await expect(insertDuplicateReversal).rejects.toThrow(/duplicate key/i);
+  });
+
+  it("returns the original point result when a command is retried", async () => {
+    // Arrange
+    const app = await buildApp({
+      matchRepository: new PostgresMatchRepository(pool),
+    });
+    apps.push(app);
+    const createResponse = await app.inject({
+      method: "POST",
+      url: "/matches",
+      payload: {
+        homePlayer: "Aino",
+        awayPlayer: "Kai",
+        initialServer: "home",
+        scoringSystem: "3x21",
+      },
+    });
+    const match = createResponse.json<MatchState>();
+    const commandId = "11111111-1111-4111-8111-111111111111";
+
+    // Act
+    const firstResponse = await app.inject({
+      method: "POST",
+      url: `/matches/${match.id}/points`,
+      headers: { "Idempotency-Key": commandId },
+      payload: { side: "home" },
+    });
+    const restartedApp = await buildApp({
+      matchRepository: new PostgresMatchRepository(pool),
+    });
+    apps.push(restartedApp);
+    const retryResponse = await restartedApp.inject({
+      method: "POST",
+      url: `/matches/${match.id}/points`,
+      headers: { "Idempotency-Key": commandId },
+      payload: { side: "home" },
+    });
+    const laterResponse = await app.inject({
+      method: "POST",
+      url: `/matches/${match.id}/points`,
+      headers: {
+        "Idempotency-Key": "22222222-2222-4222-8222-222222222222",
+      },
+      payload: { side: "home" },
+    });
+    const events = await pool.query<{ readonly event_sequence: number }>(
+      `SELECT event_sequence
+       FROM score_events
+       WHERE match_id = $1
+       ORDER BY event_sequence`,
+      [match.id],
+    );
+    const reloaded = await new PostgresMatchRepository(pool).findById(match.id);
+
+    // Assert
+    expect(firstResponse.statusCode).toBe(200);
+    expect(retryResponse.json()).toEqual(firstResponse.json());
+    expect(laterResponse.json<MatchState>().games).toEqual([
+      { home: 2, away: 0 },
+    ]);
+    expect(events.rows).toEqual([{ event_sequence: 1 }, { event_sequence: 2 }]);
+    expect(reloaded?.pointHistory).toEqual(["home", "home"]);
+  });
+
+  it("returns the original undo result when a command is retried", async () => {
+    // Arrange
+    const app = await buildApp({
+      matchRepository: new PostgresMatchRepository(pool),
+    });
+    apps.push(app);
+    const createResponse = await app.inject({
+      method: "POST",
+      url: "/matches",
+      payload: {
+        homePlayer: "Aino",
+        awayPlayer: "Kai",
+        initialServer: "home",
+        scoringSystem: "3x21",
+      },
+    });
+    const match = createResponse.json<MatchState>();
+    await app.inject({
+      method: "POST",
+      url: `/matches/${match.id}/points`,
+      headers: {
+        "Idempotency-Key": "33333333-3333-4333-8333-333333333333",
+      },
+      payload: { side: "home" },
+    });
+    const commandId = "44444444-4444-4444-8444-444444444444";
+
+    // Act
+    const firstResponse = await app.inject({
+      method: "POST",
+      url: `/matches/${match.id}/undo`,
+      headers: { "Idempotency-Key": commandId },
+    });
+    const restartedApp = await buildApp({
+      matchRepository: new PostgresMatchRepository(pool),
+    });
+    apps.push(restartedApp);
+    const retryResponse = await restartedApp.inject({
+      method: "POST",
+      url: `/matches/${match.id}/undo`,
+      headers: { "Idempotency-Key": commandId },
+    });
+    const events = await pool.query<{ readonly event_type: string }>(
+      `SELECT event_type
+       FROM score_events
+       WHERE match_id = $1
+       ORDER BY event_sequence`,
+      [match.id],
+    );
+    const reloaded = await new PostgresMatchRepository(pool).findById(match.id);
+
+    // Assert
+    expect(firstResponse.statusCode).toBe(200);
+    expect(retryResponse.json()).toEqual(firstResponse.json());
+    expect(events.rows).toEqual([
+      { event_type: "rally_awarded" },
+      { event_type: "rally_reversed" },
+    ]);
+    expect(reloaded?.pointHistory).toEqual([]);
   });
 });

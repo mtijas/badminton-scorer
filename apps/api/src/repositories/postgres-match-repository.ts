@@ -34,6 +34,19 @@ interface ScoreEventRow {
   readonly reversed_event_id: string | null;
 }
 
+type ScoreCommandType = "point" | "undo";
+
+interface ScoreCommandRow {
+  readonly command_type: ScoreCommandType;
+  readonly awarded_side: Side | null;
+  readonly result_event_sequence: number;
+}
+
+interface WriteCommandResult {
+  readonly match: MatchState;
+  readonly eventSequence: number;
+}
+
 export class PostgresMatchRepository implements MatchRepository {
   public constructor(private readonly pool: Pool) {}
 
@@ -63,33 +76,55 @@ export class PostgresMatchRepository implements MatchRepository {
   public async recordPoint(
     id: string,
     side: Side,
+    commandId: string,
   ): Promise<MatchState | undefined> {
-    return this.runWriteCommand(id, async (client, match) => {
-      if (match.status === "complete") {
-        throw new Error("Match is already complete.");
-      }
+    return this.runWriteCommand(
+      id,
+      commandId,
+      "point",
+      side,
+      async (client, match) => {
+        if (match.status === "complete") {
+          throw new Error("Match is already complete.");
+        }
 
-      const scoringState = recordRally(match, side);
-      const updated = withScoringState(match, scoringState);
-      await appendAwardEvent(client, match, side);
-      await syncProjection(client, updated);
-      return updated;
-    });
+        const scoringState = recordRally(match, side);
+        const updated = withScoringState(match, scoringState);
+        const eventSequence = await appendAwardEvent(client, match, side);
+        await syncProjection(client, updated);
+        return { match: updated, eventSequence };
+      },
+    );
   }
 
-  public async undoLatestRally(id: string): Promise<MatchState | undefined> {
-    return this.runWriteCommand(id, async (client, match) => {
-      const scoringState = undoRally(match);
-      const updated = withScoringState(match, scoringState);
-      await appendReversalEvent(client, match.id);
-      await syncProjection(client, updated);
-      return updated;
-    });
+  public async undoLatestRally(
+    id: string,
+    commandId: string,
+  ): Promise<MatchState | undefined> {
+    return this.runWriteCommand(
+      id,
+      commandId,
+      "undo",
+      null,
+      async (client, match) => {
+        const scoringState = undoRally(match);
+        const updated = withScoringState(match, scoringState);
+        const eventSequence = await appendReversalEvent(client, match.id);
+        await syncProjection(client, updated);
+        return { match: updated, eventSequence };
+      },
+    );
   }
 
   private async runWriteCommand(
     id: string,
-    command: (client: PoolClient, match: MatchState) => Promise<MatchState>,
+    commandId: string,
+    commandType: ScoreCommandType,
+    awardedSide: Side | null,
+    command: (
+      client: PoolClient,
+      match: MatchState,
+    ) => Promise<WriteCommandResult>,
   ): Promise<MatchState | undefined> {
     const client = await this.pool.connect();
     try {
@@ -100,9 +135,30 @@ export class PostgresMatchRepository implements MatchRepository {
         return undefined;
       }
 
-      const updated = await command(client, match);
+      const previousCommand = await findCommand(client, id, commandId);
+      if (previousCommand) {
+        assertSameCommand(previousCommand, commandType, awardedSide);
+        const originalResult = await loadMatch(
+          client,
+          id,
+          false,
+          previousCommand.result_event_sequence,
+        );
+        await client.query("COMMIT");
+        return originalResult;
+      }
+
+      const result = await command(client, match);
+      await insertCommand(
+        client,
+        id,
+        commandId,
+        commandType,
+        awardedSide,
+        result.eventSequence,
+      );
       await client.query("COMMIT");
-      return updated;
+      return result.match;
     } catch (error) {
       await client.query("ROLLBACK");
       throw error;
@@ -116,6 +172,7 @@ async function loadMatch(
   client: PoolClient,
   id: string,
   lock = false,
+  eventSequence?: number,
 ): Promise<MatchState | undefined> {
   const matchResult = await client.query<MatchRow>(
     `SELECT id, scoring_system, initial_server
@@ -136,13 +193,21 @@ async function loadMatch(
        ORDER BY match_sides.side, match_side_players.player_order`,
       [id],
     ),
-    client.query<ScoreEventRow>(
-      `SELECT id, event_type, awarded_side, reversed_event_id
-       FROM score_events
-       WHERE match_id = $1
-       ORDER BY event_sequence`,
-      [id],
-    ),
+    eventSequence === undefined
+      ? client.query<ScoreEventRow>(
+          `SELECT id, event_type, awarded_side, reversed_event_id
+           FROM score_events
+           WHERE match_id = $1
+           ORDER BY event_sequence`,
+          [id],
+        )
+      : client.query<ScoreEventRow>(
+          `SELECT id, event_type, awarded_side, reversed_event_id
+           FROM score_events
+           WHERE match_id = $1 AND event_sequence <= $2
+           ORDER BY event_sequence`,
+          [id, eventSequence],
+        ),
   ]);
 
   const homePlayer = playersResult.rows.find(
@@ -261,7 +326,7 @@ async function appendAwardEvent(
   client: PoolClient,
   match: MatchState,
   awardedSide: Side,
-): Promise<void> {
+): Promise<number> {
   const eventSequence = await nextEventSequence(client, match.id);
   const game = await findGame(client, match.id, match.games.length);
   await client.query(
@@ -269,12 +334,13 @@ async function appendAwardEvent(
      VALUES ($1, $2, $3, 'rally_awarded', $4)`,
     [match.id, game.id, eventSequence, awardedSide],
   );
+  return eventSequence;
 }
 
 async function appendReversalEvent(
   client: PoolClient,
   matchId: string,
-): Promise<void> {
+): Promise<number> {
   const eventSequence = await nextEventSequence(client, matchId);
   const awardResult = await client.query<ScoreEventRow>(
     `SELECT awarded.id, awarded.event_type, awarded.awarded_side, awarded.reversed_event_id
@@ -296,6 +362,54 @@ async function appendReversalEvent(
     `INSERT INTO score_events (match_id, game_id, event_sequence, event_type, reversed_event_id)
      VALUES ($1, $2, $3, 'rally_reversed', $4)`,
     [matchId, game.id, eventSequence, award.id],
+  );
+  return eventSequence;
+}
+
+async function findCommand(
+  client: PoolClient,
+  matchId: string,
+  commandId: string,
+): Promise<ScoreCommandRow | undefined> {
+  const result = await client.query<ScoreCommandRow>(
+    `SELECT command_type, awarded_side, result_event_sequence
+     FROM score_commands
+     WHERE match_id = $1 AND command_id = $2`,
+    [matchId, commandId],
+  );
+  return result.rows[0];
+}
+
+function assertSameCommand(
+  command: ScoreCommandRow,
+  commandType: ScoreCommandType,
+  awardedSide: Side | null,
+): void {
+  if (
+    command.command_type !== commandType ||
+    command.awarded_side !== awardedSide
+  ) {
+    throw new Error("Idempotency key is already used for a different command.");
+  }
+}
+
+async function insertCommand(
+  client: PoolClient,
+  matchId: string,
+  commandId: string,
+  commandType: ScoreCommandType,
+  awardedSide: Side | null,
+  eventSequence: number,
+): Promise<void> {
+  await client.query(
+    `INSERT INTO score_commands (
+       match_id,
+       command_id,
+       command_type,
+       awarded_side,
+       result_event_sequence
+     ) VALUES ($1, $2, $3, $4, $5)`,
+    [matchId, commandId, commandType, awardedSide, eventSequence],
   );
 }
 

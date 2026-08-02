@@ -18,6 +18,11 @@ references exactly one earlier award in the same match. Events are ordered by a
 unique match-local sequence number, may not be updated or deleted, and are
 replayed by application code using the shared scoring domain.
 
+`score_commands` stores accepted point and undo command identifiers. A command
+is unique within its match and references the score event sequence that formed
+its result. This allows a retry to replay the original response without adding
+another score event.
+
 The schema requires exactly one `home` and one `away` side per match, each with
 one or two players. A deferred constraint trigger allows the repository to
 create that composition atomically. It also permits at most one in-progress
