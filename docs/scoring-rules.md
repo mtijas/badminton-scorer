@@ -2,7 +2,7 @@
 
 ## Supported format
 
-This application currently implements the standard **BWF best-of-three (3×21)** badminton scoring system.
+This application currently implements the standard **BWF best-of-three (3×21)** and **BWF best-of-three (3×15)** badminton scoring systems.
 
 - The first side to win **two games** wins the match.
 - Other match formats are not currently supported.
@@ -19,9 +19,33 @@ This application currently implements the standard **BWF best-of-three (3×21)**
 
 ## Winning a game
 
+### BWF best-of-three (3×21)
+
 - A game is won by reaching **21 points** with at least a **two-point lead**.
 - At **20–20**, play continues until one side leads by two points.
 - At **29–29**, the side reaching **30 points** wins the game.
+
+### BWF best-of-three (3×15)
+
+- A game is won by reaching **15 points** with at least a **two-point lead**.
+- At **14-14**, play continues until one side leads by two points.
+- At **20-20**, the side reaching **21 points** wins the game.
+
+## Change of ends
+
+### BWF best-of-three (3×21)
+
+- Players shall change ends:
+  - at the end of the first game;
+  - at the end of the second game, if there is to be a third game; and
+  - in the third game when a side first scores 8 points.
+
+### BWF best-of-three (3×15)
+
+- Players shall change ends:
+  - at the end of the first game;
+  - at the end of the second game, if there is to be a third game; and
+  - in the third game when a side first scores 11 points.
 
 ## Game transitions
 
