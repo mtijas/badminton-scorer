@@ -77,6 +77,11 @@ function LiveMatch({
       <h1>
         {match.status === "complete" ? `${winnerName} wins` : "Live match"}
       </h1>
+      {match.endsChangeDue && (
+        <aside className="ends-change-prompt" role="status">
+          Change ends now.
+        </aside>
+      )}
       <p aria-atomic="true" aria-live="polite" className="visually-hidden">
         {match.homePlayer}: {score.home}. {match.awayPlayer}: {score.away}.{" "}
         {servingPlayer} is serving.

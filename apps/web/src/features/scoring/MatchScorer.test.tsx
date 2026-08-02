@@ -251,6 +251,7 @@ describe("match scoring workflow", () => {
         { home: 21, away: 15 },
         { home: 0, away: 0 },
       ],
+      endsChangeDue: true,
       pointHistory: [...gamePoint.pointHistory, "home"],
     };
     vi.mocked(createMatch).mockResolvedValue(gamePoint);
@@ -268,6 +269,7 @@ describe("match scoring workflow", () => {
     expect(screen.getAllByText("0", { selector: "strong" })).toHaveLength(2);
     expect(screen.getByText("Game 1: 21–15")).toBeTruthy();
     expect(screen.getByLabelText("Aino is serving")).toBeTruthy();
+    expect(screen.getByRole("status").textContent).toBe("Change ends now.");
   });
 
   it("returns to match setup when starting a new match after completion", async () => {
