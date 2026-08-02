@@ -203,4 +203,106 @@ describeWithDatabase("PostgresMatchRepository", () => {
       "home",
     ]);
   });
+
+  it("replays a completed match and restores it when the winning rally is undone", async () => {
+    // Arrange
+    const app = await buildApp({
+      matchRepository: new PostgresMatchRepository(pool),
+    });
+    apps.push(app);
+    const createResponse = await app.inject({
+      method: "POST",
+      url: "/matches",
+      payload: {
+        homePlayer: "Aino",
+        awayPlayer: "Kai",
+        initialServer: "home",
+        scoringSystem: "3x15",
+      },
+    });
+    const match = createResponse.json<MatchState>();
+    for (let rally = 0; rally < 30; rally += 1) {
+      const response = await app.inject({
+        method: "POST",
+        url: `/matches/${match.id}/points`,
+        payload: { side: "home" },
+      });
+      expect(response.statusCode).toBe(200);
+    }
+
+    // Act
+    const undoResponse = await app.inject({
+      method: "POST",
+      url: `/matches/${match.id}/undo`,
+    });
+    const reloaded = await new PostgresMatchRepository(pool).findById(match.id);
+    const events = await pool.query<{
+      readonly event_type: string;
+    }>(
+      `SELECT event_type
+       FROM score_events
+       WHERE match_id = $1
+       ORDER BY event_sequence`,
+      [match.id],
+    );
+
+    // Assert
+    expect(undoResponse.statusCode).toBe(200);
+    expect(reloaded).toMatchObject({
+      status: "in_progress",
+      winner: null,
+      games: [
+        { home: 15, away: 0 },
+        { home: 14, away: 0 },
+      ],
+    });
+    expect(events.rows).toHaveLength(31);
+    expect(events.rows.at(-1)).toEqual({ event_type: "rally_reversed" });
+  });
+
+  it("rejects reversing the same awarded rally twice", async () => {
+    // Arrange
+    const app = await buildApp({
+      matchRepository: new PostgresMatchRepository(pool),
+    });
+    apps.push(app);
+    const createResponse = await app.inject({
+      method: "POST",
+      url: "/matches",
+      payload: {
+        homePlayer: "Aino",
+        awayPlayer: "Kai",
+        initialServer: "home",
+        scoringSystem: "3x21",
+      },
+    });
+    const match = createResponse.json<MatchState>();
+    await app.inject({
+      method: "POST",
+      url: `/matches/${match.id}/points`,
+      payload: { side: "home" },
+    });
+    await app.inject({ method: "POST", url: `/matches/${match.id}/undo` });
+    const reversal = await pool.query<{
+      readonly game_id: string;
+      readonly reversed_event_id: string;
+    }>(
+      `SELECT game_id, reversed_event_id
+       FROM score_events
+       WHERE match_id = $1 AND event_type = 'rally_reversed'`,
+      [match.id],
+    );
+    const originalReversal = reversal.rows[0];
+    if (!originalReversal) throw new Error("Expected a stored rally reversal.");
+
+    // Act
+    const insertDuplicateReversal = pool.query(
+      `INSERT INTO score_events (match_id, game_id, event_sequence, event_type, reversed_event_id)
+       VALUES ($1, $2, 3, 'rally_reversed', $3)`,
+      [match.id, originalReversal.game_id, originalReversal.reversed_event_id],
+    );
+
+    // Assert
+    await expect(insertDuplicateReversal).rejects.toThrow(/duplicate key/i);
+  });
 });

@@ -1,0 +1,14 @@
+services:
+  database-test:
+    image: postgres:16-alpine
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: badminton_scorer_test
+      POSTGRES_USER: badminton
+      POSTGRES_PASSWORD: badminton
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U badminton -d badminton_scorer_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
