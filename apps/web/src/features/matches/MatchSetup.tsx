@@ -16,7 +16,7 @@ export function MatchSetup({ error, onStart }: MatchSetupProps): ReactElement {
   const [homePlayer, setHomePlayer] = useState("Player one");
   const [awayPlayer, setAwayPlayer] = useState("Player two");
   const [initialServer, setInitialServer] = useState<Side>("home");
-  const [scoringSystem, setScoringSystem] = useState<ScoringSystem>("3x21");
+  const [scoringSystem, setScoringSystem] = useState<ScoringSystem>("3x15");
   const [validationError, setValidationError] = useState<string | null>(null);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>): void {
@@ -73,21 +73,21 @@ export function MatchSetup({ error, onStart }: MatchSetupProps): ReactElement {
           <legend>Scoring system</legend>
           <label>
             <input
-              checked={scoringSystem === "3x21"}
-              name="scoring-system"
-              onChange={() => setScoringSystem("3x21")}
-              type="radio"
-            />
-            Best of three, 21 points
-          </label>
-          <label>
-            <input
               checked={scoringSystem === "3x15"}
               name="scoring-system"
               onChange={() => setScoringSystem("3x15")}
               type="radio"
             />
             Best of three, 15 points
+          </label>
+          <label>
+            <input
+              checked={scoringSystem === "3x21"}
+              name="scoring-system"
+              onChange={() => setScoringSystem("3x21")}
+              type="radio"
+            />
+            Best of three, 21 points
           </label>
         </fieldset>
         <button type="submit">Start match</button>

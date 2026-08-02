@@ -22,6 +22,9 @@ test("records and undoes a point in a new match", async ({ page }) => {
 
   // Act
   await page.getByRole("button", { name: "Start match" }).click();
+  await expect(
+    page.getByText("Game 1 · Best of 3 · 15-point games"),
+  ).toBeVisible();
   await expect(page.getByLabel("Aino is serving")).toBeVisible();
   await page.getByRole("button", { name: "Add point for Kai" }).click();
   await expect(page.getByLabel("Kai is serving")).toBeVisible();

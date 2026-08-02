@@ -56,12 +56,27 @@ describe("match scoring workflow", () => {
 
     // Assert
     await screen.findByRole("heading", { name: "Live match" });
-    expect(createMatch).toHaveBeenCalledWith("Aino", "Kai", "home", "3x21");
+    expect(createMatch).toHaveBeenCalledWith("Aino", "Kai", "home", "3x15");
     expect(screen.getByRole("heading", { name: "Aino" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Kai" })).toBeTruthy();
     expect(screen.getByLabelText("Aino is serving")).toBeTruthy();
     expect(screen.queryByLabelText("Kai is serving")).toBeNull();
     expect(screen.getAllByText("Games won: 0")).toHaveLength(2);
+  });
+
+  it("lists the default 3x15 system before the 3x21 alternative", () => {
+    // Arrange
+    render(<App />);
+
+    // Act
+    const scoringSystemChoices = screen.getAllByRole("radio", {
+      name: /Best of three/,
+    });
+
+    // Assert
+    expect(
+      scoringSystemChoices.map((choice) => choice.parentElement?.textContent),
+    ).toEqual(["Best of three, 15 points", "Best of three, 21 points"]);
   });
 
   it("records the selected away player as the first server", async () => {
@@ -83,22 +98,22 @@ describe("match scoring workflow", () => {
       "Player one",
       "Player two",
       "away",
-      "3x21",
+      "3x15",
     );
     expect(screen.getByLabelText("Kai is serving")).toBeTruthy();
   });
 
-  it("records the selected 3x15 scoring system", async () => {
+  it("records the selected 3x21 scoring system", async () => {
     // Arrange
     vi.mocked(createMatch).mockResolvedValue({
       ...startingMatch,
-      scoringSystem: "3x15",
+      scoringSystem: "3x21",
     });
     render(<App />);
 
     // Act
     fireEvent.click(
-      screen.getByRole("radio", { name: "Best of three, 15 points" }),
+      screen.getByRole("radio", { name: "Best of three, 21 points" }),
     );
     fireEvent.click(screen.getByRole("button", { name: "Start match" }));
 
@@ -108,10 +123,10 @@ describe("match scoring workflow", () => {
       "Player one",
       "Player two",
       "home",
-      "3x15",
+      "3x21",
     );
     expect(
-      screen.getByText("Game 1 · Best of 3 · 15-point games"),
+      screen.getByText("Game 1 · Best of 3 · 21-point games"),
     ).toBeTruthy();
   });
 
