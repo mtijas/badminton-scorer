@@ -10,8 +10,7 @@
 
 - Read this constitution and the repository's `AGENTS.md` before choosing work.
 - Pick the highest-priority incomplete spec in `specs/` (lower number = higher priority).
-- Implement and test one work item at a time. Leave commits and pushes for
-  human review.
+- Implement, test, commit, and push one work item at a time.
 - Output `<promise>DONE</promise>` only when a work item is 100% complete; output `<promise>ALL_DONE</promise>` only when no work remains.
 
 **Interactive Mode** (normal conversation):
@@ -39,9 +38,9 @@
 
 ## Autonomy
 
-YOLO Mode: DISABLED
+YOLO Mode: ENABLED
 
-Git Autonomy: DISABLED
+Git Autonomy: ENABLED
 
 ---
 
@@ -69,9 +68,7 @@ Create `completion_log/YYYY-MM-DD--HH-MM-SS--work-item.md` after each completion
 
 ## Completion Signal
 
-Run all required verification, including `pnpm check` for code changes, before
-outputting `<promise>DONE</promise>`. Never create commits or push changes;
-leave the completed working tree for human review.
+Run all required verification, including `pnpm check` for code changes. Commit and push the completed work using a Conventional Commit message before outputting `<promise>DONE</promise>`. Never output a completion signal until those conditions are true.
 
 ## Ralph Wiggum Version
 
