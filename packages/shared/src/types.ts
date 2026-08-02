@@ -21,10 +21,28 @@ export interface ScoringState {
   readonly pointHistory: readonly Side[];
 }
 
+export interface ScoreEvent {
+  readonly id: string;
+  readonly type: "rally_awarded" | "rally_reversed";
+  readonly awardedSide: Side | null;
+  readonly reversedEventId: string | null;
+  readonly occurredAt: string;
+}
+
+export interface ScoreHistoryEntry {
+  readonly eventNumber: number;
+  readonly type: ScoreEvent["type"];
+  readonly awardedSide: Side | null;
+  readonly gameNumber: number;
+  readonly score: GameScore;
+  readonly occurredAt: string;
+}
+
 export interface MatchState extends ScoringState {
   id: string;
   homePlayer: string;
   awayPlayer: string;
   status: "in_progress" | "complete";
   winner: Side | null;
+  scoreHistory: readonly ScoreHistoryEntry[];
 }

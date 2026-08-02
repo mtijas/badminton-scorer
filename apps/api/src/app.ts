@@ -55,6 +55,7 @@ export async function buildApp({
       ...scoringState,
       status: "in_progress",
       winner: null,
+      scoreHistory: [],
     };
     await matchRepository.create(match);
     return reply.code(201).send(match);

@@ -66,9 +66,24 @@ reversal event.
   "endsChangeDue": false,
   "games": [{ "home": 21, "away": 18 }],
   "pointHistory": ["home", "away", "away"],
+  "scoreHistory": [
+    {
+      "eventNumber": 1,
+      "type": "rally_awarded",
+      "awardedSide": "home",
+      "gameNumber": 1,
+      "score": { "home": 1, "away": 0 },
+      "occurredAt": "2026-08-02T17:00:00.000Z"
+    }
+  ],
   "status": "in_progress",
   "winner": null
 }
 ```
 
 `servingSide` is the side that serves the next rally. `endsChangeDue` is true immediately after a required change of ends: after game 1, at the start of a deciding third game, or when a side first reaches 11 points in a 3x21 deciding game (8 points in 3x15). `pointHistory` lists the side that won each recorded rally in order; together with `initialServer` and `scoringSystem`, it supports deterministic score replay and undo.
+
+`scoreHistory` is the chronological score-event stream for display. An award entry
+names the scoring side; a `rally_reversed` entry identifies an undo/correction.
+Each entry includes the resulting score for the affected game and its ISO-8601
+timestamp.

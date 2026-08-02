@@ -1,8 +1,8 @@
 import {
-  createScoringState,
   gameWinner,
   matchWinner,
   recordRally,
+  replayScoreEvents,
   undoRally,
   type MatchState,
   type ScoringState,
@@ -32,6 +32,7 @@ interface ScoreEventRow {
   readonly event_type: "rally_awarded" | "rally_reversed";
   readonly awarded_side: Side | null;
   readonly reversed_event_id: string | null;
+  readonly created_at: Date;
 }
 
 type ScoreCommandType = "point" | "undo";
@@ -157,8 +158,11 @@ export class PostgresMatchRepository implements MatchRepository {
         awardedSide,
         result.eventSequence,
       );
+      const updatedMatch = await loadMatch(client, id);
+      if (!updatedMatch)
+        throw new Error("Stored match disappeared after update.");
       await client.query("COMMIT");
-      return result.match;
+      return updatedMatch;
     } catch (error) {
       await client.query("ROLLBACK");
       throw error;
@@ -195,14 +199,14 @@ async function loadMatch(
     ),
     eventSequence === undefined
       ? client.query<ScoreEventRow>(
-          `SELECT id, event_type, awarded_side, reversed_event_id
+          `SELECT id, event_type, awarded_side, reversed_event_id, created_at
            FROM score_events
            WHERE match_id = $1
            ORDER BY event_sequence`,
           [id],
         )
       : client.query<ScoreEventRow>(
-          `SELECT id, event_type, awarded_side, reversed_event_id
+          `SELECT id, event_type, awarded_side, reversed_event_id, created_at
            FROM score_events
            WHERE match_id = $1 AND event_sequence <= $2
            ORDER BY event_sequence`,
@@ -220,10 +224,16 @@ async function loadMatch(
     throw new Error("Stored match is missing a player.");
   }
 
-  const scoringState = replayEvents(
+  const { scoringState, scoreHistory } = replayScoreEvents(
     match.initial_server,
     match.scoring_system,
-    eventsResult.rows,
+    eventsResult.rows.map((event) => ({
+      id: event.id,
+      type: event.event_type,
+      awardedSide: event.awarded_side,
+      reversedEventId: event.reversed_event_id,
+      occurredAt: event.created_at.toISOString(),
+    })),
   );
   const winner = matchWinner(scoringState.games, scoringState.scoringSystem);
   return {
@@ -233,33 +243,8 @@ async function loadMatch(
     ...scoringState,
     status: winner ? "complete" : "in_progress",
     winner,
+    scoreHistory,
   };
-}
-
-function replayEvents(
-  initialServer: Side,
-  scoringSystem: MatchState["scoringSystem"],
-  events: readonly ScoreEventRow[],
-): ScoringState {
-  const reversedEventIds = new Set(
-    events.flatMap((event) =>
-      event.event_type === "rally_reversed" && event.reversed_event_id
-        ? [event.reversed_event_id]
-        : [],
-    ),
-  );
-  const rallyWinners = events.flatMap((event) =>
-    event.event_type === "rally_awarded" &&
-    event.awarded_side &&
-    !reversedEventIds.has(event.id)
-      ? [event.awarded_side]
-      : [],
-  );
-
-  return rallyWinners.reduce(
-    recordRally,
-    createScoringState(initialServer, scoringSystem),
-  );
 }
 
 async function insertMatch(

@@ -1,8 +1,9 @@
-import { type ReactElement, useState } from "react";
+import { type ReactElement, useEffect, useRef, useState } from "react";
 import {
   gamesWon,
   previousCompletedGames,
   type MatchState,
+  type ScoreHistoryEntry,
   type Side,
 } from "@badminton-scorer/shared";
 import { RequestError } from "../../components/RequestError.js";
@@ -69,102 +70,154 @@ function LiveMatch({
     match.scoringSystem,
   );
   return (
-    <main className="scoreboard">
-      <p>
-        Game {match.games.length} · Best of 3 · {match.scoringSystem.slice(2)}
-        -point games
-      </p>
-      <h1>
-        {match.status === "complete" ? `${winnerName} wins` : "Live match"}
-      </h1>
-      {match.endsChangeDue && (
-        <aside className="ends-change-prompt" role="status">
-          Change ends now.
-        </aside>
-      )}
-      <p aria-atomic="true" aria-live="polite" className="visually-hidden">
-        {match.homePlayer}: {score.home}. {match.awayPlayer}: {score.away}.{" "}
-        {servingPlayer} is serving.
-      </p>
-      <section>
-        {(["home", "away"] as Side[]).map((side) => (
-          <article key={side}>
-            <h2>{match[`${side}Player`]}</h2>
-            {match.servingSide === side ? (
-              <p
-                aria-label={`${match[`${side}Player`]} is serving`}
-                className="serving-indicator"
-              >
-                Serving
-              </p>
-            ) : (
-              <p aria-hidden="true" className="serving-indicator">
-                {"\u00a0"}
-              </p>
-            )}
-            <strong>{score[side]}</strong>
-            <p>Games won: {won[side]}</p>
+    <div className="match-screen">
+      <main className="scoreboard">
+        <div className="live-scorer">
+          <p>
+            Game {match.games.length} · Best of 3 ·{" "}
+            {match.scoringSystem.slice(2)}-point games
+          </p>
+          <h1>
+            {match.status === "complete" ? `${winnerName} wins` : "Live match"}
+          </h1>
+          {match.endsChangeDue && (
+            <aside className="ends-change-prompt" role="status">
+              Change ends now.
+            </aside>
+          )}
+          <p aria-atomic="true" aria-live="polite" className="visually-hidden">
+            {match.homePlayer}: {score.home}. {match.awayPlayer}: {score.away}.{" "}
+            {servingPlayer} is serving.
+          </p>
+          <section>
+            {(["home", "away"] as Side[]).map((side) => (
+              <article key={side}>
+                <h2>{match[`${side}Player`]}</h2>
+                {match.servingSide === side ? (
+                  <p
+                    aria-label={`${match[`${side}Player`]} is serving`}
+                    className="serving-indicator"
+                  >
+                    Serving
+                  </p>
+                ) : (
+                  <p aria-hidden="true" className="serving-indicator">
+                    {"\u00a0"}
+                  </p>
+                )}
+                <strong>{score[side]}</strong>
+                <p>Games won: {won[side]}</p>
+                <button
+                  aria-label={`Add point for ${match[`${side}Player`]}`}
+                  disabled={match.status === "complete" || isUpdatingScore}
+                  onClick={() => {
+                    void onAddPoint(side);
+                  }}
+                >
+                  Add point
+                </button>
+              </article>
+            ))}
+          </section>
+          <div className="match-actions">
             <button
-              aria-label={`Add point for ${match[`${side}Player`]}`}
-              disabled={match.status === "complete" || isUpdatingScore}
+              disabled={match.pointHistory.length === 0 || isUpdatingScore}
               onClick={() => {
-                void onAddPoint(side);
+                void onUndoLastPoint();
               }}
             >
-              Add point
+              Undo last point
             </button>
-          </article>
-        ))}
-      </section>
-      <div className="match-actions">
-        <button
-          disabled={match.pointHistory.length === 0 || isUpdatingScore}
-          onClick={() => {
-            void onUndoLastPoint();
-          }}
-        >
-          Undo last point
-        </button>
-        <button
-          disabled={match.status === "complete"}
-          onClick={() => setIsAbandonConfirmationOpen(true)}
-        >
-          Abandon match
-        </button>
-        {match.status === "complete" && (
-          <button onClick={onNewMatch}>New match</button>
-        )}
-      </div>
-      {isAbandonConfirmationOpen && (
-        <div
-          aria-labelledby="abandon-match-title"
-          aria-modal="true"
-          className="confirmation-dialog"
-          role="dialog"
-        >
-          <h2 id="abandon-match-title">Abandon this match?</h2>
-          <p>Are you sure you want to abandon this match?</p>
-          <div className="match-actions">
-            <button onClick={() => setIsAbandonConfirmationOpen(false)}>
-              Cancel
+            <button
+              disabled={match.status === "complete"}
+              onClick={() => setIsAbandonConfirmationOpen(true)}
+            >
+              Abandon match
             </button>
-            <button onClick={onNewMatch}>Yes, abandon match</button>
+            {match.status === "complete" && (
+              <button onClick={onNewMatch}>New match</button>
+            )}
           </div>
         </div>
-      )}
-      {previousGames.length > 0 && (
-        <div className="game-history">
-          <h2>Previous games</h2>
-          <ol>
-            {previousGames.map((game, index) => (
-              <li key={index}>
-                Game {index + 1}: {game.home}–{game.away}
-              </li>
-            ))}
-          </ol>
-        </div>
-      )}
-      {error && <RequestError message={error} />}
-    </main>
+        {isAbandonConfirmationOpen && (
+          <div
+            aria-labelledby="abandon-match-title"
+            aria-modal="true"
+            className="confirmation-dialog"
+            role="dialog"
+          >
+            <h2 id="abandon-match-title">Abandon this match?</h2>
+            <p>Are you sure you want to abandon this match?</p>
+            <div className="match-actions">
+              <button onClick={() => setIsAbandonConfirmationOpen(false)}>
+                Cancel
+              </button>
+              <button onClick={onNewMatch}>Yes, abandon match</button>
+            </div>
+          </div>
+        )}
+        {previousGames.length > 0 && (
+          <div className="game-history">
+            <h2>Previous games</h2>
+            <ol>
+              {previousGames.map((game, index) => (
+                <li key={index}>
+                  Game {index + 1}: {game.home}–{game.away}
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
+        {error && <RequestError message={error} />}
+      </main>
+      <ScoreHistory match={match} />
+    </div>
   );
+}
+
+function ScoreHistory({ match }: { readonly match: MatchState }): ReactElement {
+  const listRef = useRef<HTMLOListElement>(null);
+
+  useEffect(() => {
+    const list = listRef.current;
+    if (list) list.scrollTop = list.scrollHeight;
+  }, [match.scoreHistory]);
+
+  return (
+    <aside aria-label="Scoring history" className="score-history">
+      <h2>Scoring history</h2>
+      <ol ref={listRef}>
+        {match.scoreHistory.map((entry) => (
+          <li key={entry.eventNumber}>
+            <time dateTime={entry.occurredAt}>
+              {formatHistoryTime(entry.occurredAt)}
+            </time>
+            <span>{historyDescription(entry, match)}</span>
+          </li>
+        ))}
+      </ol>
+    </aside>
+  );
+}
+
+function formatHistoryTime(occurredAt: string): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date(occurredAt));
+}
+
+function historyDescription(
+  entry: ScoreHistoryEntry,
+  match: MatchState,
+): string {
+  const score = `${entry.score.home}–${entry.score.away}`;
+  if (entry.type === "rally_reversed") {
+    return `Correction: undo — Game ${entry.gameNumber}, ${score}`;
+  }
+  const player = entry.awardedSide
+    ? match[`${entry.awardedSide}Player`]
+    : "Unknown player";
+  return `${player} scored — Game ${entry.gameNumber}, ${score}`;
 }

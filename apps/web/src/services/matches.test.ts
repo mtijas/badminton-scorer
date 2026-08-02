@@ -12,6 +12,7 @@ const match: MatchState = {
   endsChangeDue: false,
   games: [{ home: 0, away: 0 }],
   pointHistory: [],
+  scoreHistory: [],
   status: "in_progress",
   winner: null,
 };

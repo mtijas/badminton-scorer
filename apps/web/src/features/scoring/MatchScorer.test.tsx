@@ -28,6 +28,7 @@ const startingMatch: MatchState = {
   endsChangeDue: false,
   games: [{ home: 0, away: 0 }],
   pointHistory: [],
+  scoreHistory: [],
   status: "in_progress",
   winner: null,
 };
@@ -236,6 +237,54 @@ describe("match scoring workflow", () => {
     // Assert
     await screen.findByRole("heading", { name: "Previous games" });
     expect(screen.getByText("Game 1: 21–18")).toBeTruthy();
+  });
+
+  it("shows score events in order and identifies an undo as a correction", async () => {
+    // Arrange
+    vi.mocked(createMatch).mockResolvedValue({
+      ...startingMatch,
+      games: [{ home: 1, away: 0 }],
+      pointHistory: ["home"],
+      scoreHistory: [
+        {
+          eventNumber: 1,
+          type: "rally_awarded",
+          awardedSide: "home",
+          gameNumber: 1,
+          score: { home: 1, away: 0 },
+          occurredAt: "2026-08-02T17:00:00.000Z",
+        },
+        {
+          eventNumber: 2,
+          type: "rally_awarded",
+          awardedSide: "away",
+          gameNumber: 1,
+          score: { home: 1, away: 1 },
+          occurredAt: "2026-08-02T17:01:00.000Z",
+        },
+        {
+          eventNumber: 3,
+          type: "rally_reversed",
+          awardedSide: null,
+          gameNumber: 1,
+          score: { home: 1, away: 0 },
+          occurredAt: "2026-08-02T17:02:00.000Z",
+        },
+      ],
+    });
+    render(<App />);
+
+    // Act
+    fireEvent.click(screen.getByRole("button", { name: "Start match" }));
+
+    // Assert
+    const history = await screen.findByRole("complementary", {
+      name: "Scoring history",
+    });
+    expect(history.textContent).toContain("Aino scored — Game 1, 1–0");
+    expect(history.querySelector("time")?.textContent).toMatch(/^\d{2}:\d{2}$/);
+    expect(history.textContent).toContain("Kai scored — Game 1, 1–1");
+    expect(history.textContent).toContain("Correction: undo — Game 1, 1–0");
   });
 
   it("immediately shows games won and the next game after a game-winning rally", async () => {

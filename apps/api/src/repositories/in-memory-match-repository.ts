@@ -1,14 +1,15 @@
 import {
   matchWinner,
-  recordRally,
-  undoRally,
   type MatchState,
+  replayScoreEvents,
+  type ScoreEvent,
   type Side,
 } from "@badminton-scorer/shared";
 import type { MatchRepository } from "./match-repository.js";
 
 export class InMemoryMatchRepository implements MatchRepository {
   private readonly matches = new Map<string, MatchState>();
+  private readonly scoreEvents = new Map<string, ScoreEvent[]>();
   private readonly commands = new Map<string, Map<string, StoredCommand>>();
 
   async findById(id: string): Promise<MatchState | undefined> {
@@ -17,6 +18,7 @@ export class InMemoryMatchRepository implements MatchRepository {
 
   async create(match: MatchState): Promise<void> {
     this.matches.set(match.id, match);
+    this.scoreEvents.set(match.id, []);
     this.commands.set(match.id, new Map());
   }
 
@@ -33,13 +35,27 @@ export class InMemoryMatchRepository implements MatchRepository {
       throw new Error("Match is already complete.");
     }
 
-    const scoringState = recordRally(match, side);
+    const events = this.scoreEvents.get(id);
+    if (!events) throw new Error("Stored match is missing score events.");
+    events.push({
+      id: `event-${events.length + 1}`,
+      type: "rally_awarded",
+      awardedSide: side,
+      reversedEventId: null,
+      occurredAt: new Date().toISOString(),
+    });
+    const { scoringState, scoreHistory } = replayScoreEvents(
+      match.initialServer,
+      match.scoringSystem,
+      events,
+    );
     const winner = matchWinner(scoringState.games, scoringState.scoringSystem);
     const updated: MatchState = {
       ...match,
       ...scoringState,
       winner,
       status: winner ? "complete" : "in_progress",
+      scoreHistory,
     };
     this.matches.set(id, updated);
     this.storeCommand(id, commandId, "point", side, updated);
@@ -55,13 +71,35 @@ export class InMemoryMatchRepository implements MatchRepository {
     const previousCommand = this.findCommand(id, commandId, "undo", null);
     if (previousCommand) return previousCommand.result;
 
-    const scoringState = undoRally(match);
+    const events = this.scoreEvents.get(id);
+    if (!events) throw new Error("Stored match is missing score events.");
+    const latestAward = [...events]
+      .reverse()
+      .find(
+        (event) =>
+          event.type === "rally_awarded" &&
+          !events.some((candidate) => candidate.reversedEventId === event.id),
+      );
+    if (!latestAward) throw new Error("There is no point to undo.");
+    events.push({
+      id: `event-${events.length + 1}`,
+      type: "rally_reversed",
+      awardedSide: null,
+      reversedEventId: latestAward.id,
+      occurredAt: new Date().toISOString(),
+    });
+    const { scoringState, scoreHistory } = replayScoreEvents(
+      match.initialServer,
+      match.scoringSystem,
+      events,
+    );
     const winner = matchWinner(scoringState.games, scoringState.scoringSystem);
     const updated: MatchState = {
       ...match,
       ...scoringState,
       winner,
       status: winner ? "complete" : "in_progress",
+      scoreHistory,
     };
     this.matches.set(id, updated);
     this.storeCommand(id, commandId, "undo", null, updated);

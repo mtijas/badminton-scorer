@@ -85,6 +85,48 @@ input:focus-visible {
 .scoreboard {
   text-align: center;
 }
+.match-screen {
+  display: grid;
+  grid-template-columns: minmax(0, 48rem) minmax(20rem, 28rem);
+  gap: 2rem;
+  align-items: start;
+  max-width: 82rem;
+  margin: 5rem auto;
+  padding: 0 2rem;
+}
+.match-screen .scoreboard {
+  width: auto;
+  margin: 0;
+}
+.score-history {
+  max-height: 32rem;
+  padding: 1rem;
+  text-align: left;
+  border: 1px solid #d9e2ec;
+  border-radius: 0.75rem;
+  background: #f8fbfd;
+}
+.score-history h2 {
+  margin-top: 0;
+}
+.score-history ol {
+  max-height: 24rem;
+  margin: 0;
+  padding-left: 1.5rem;
+  overflow-y: auto;
+}
+.score-history li {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  gap: 0.5rem;
+}
+.score-history li + li {
+  margin-top: 0.5rem;
+}
+.score-history time {
+  color: #486581;
+  font-variant-numeric: tabular-nums;
+}
 .ends-change-prompt {
   margin: 1rem 0;
   padding: 0.75rem 1rem;
@@ -143,6 +185,12 @@ article button {
 .game-history ol {
   margin-bottom: 0;
   padding-left: 1.5rem;
+}
+@media (max-width: 48rem) {
+  .match-screen {
+    grid-template-columns: 1fr;
+    margin: 2rem auto;
+  }
 }
 .request-error {
   margin-top: 1.5rem;
