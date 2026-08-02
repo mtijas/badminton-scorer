@@ -9,10 +9,16 @@ import {
   type ScoringSystem,
   type Side,
 } from "@badminton-scorer/shared";
+import { InMemoryMatchRepository } from "./repositories/in-memory-match-repository.js";
+import type { MatchRepository } from "./repositories/match-repository.js";
 
-const matches = new Map<string, MatchState>();
+export interface BuildAppOptions {
+  matchRepository?: MatchRepository;
+}
 
-export async function buildApp(): Promise<FastifyInstance> {
+export async function buildApp({
+  matchRepository = new InMemoryMatchRepository(),
+}: BuildAppOptions = {}): Promise<FastifyInstance> {
   const app = Fastify({ logger: true });
   await app.register(cors, {
     origin: process.env.WEB_ORIGIN ?? "http://localhost:5173",
@@ -53,14 +59,14 @@ export async function buildApp(): Promise<FastifyInstance> {
       status: "in_progress",
       winner: null,
     };
-    matches.set(match.id, match);
+    matchRepository.save(match);
     return reply.code(201).send(match);
   });
 
   app.get<{ Params: { id: string } }>(
     "/matches/:id",
     async (request, reply) => {
-      const match = matches.get(request.params.id);
+      const match = matchRepository.findById(request.params.id);
       return match
         ? match
         : reply.code(404).send({ error: "Match not found." });
@@ -70,7 +76,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   app.post<{ Params: { id: string }; Body: { side: Side } }>(
     "/matches/:id/points",
     async (request, reply) => {
-      const match = matches.get(request.params.id);
+      const match = matchRepository.findById(request.params.id);
       if (!match) return reply.code(404).send({ error: "Match not found." });
       if (request.body?.side !== "home" && request.body?.side !== "away") {
         return reply.code(400).send({ error: "side must be home or away." });
@@ -89,7 +95,7 @@ export async function buildApp(): Promise<FastifyInstance> {
         winner,
         status: winner ? "complete" : "in_progress",
       };
-      matches.set(match.id, updated);
+      matchRepository.save(updated);
       return updated;
     },
   );
@@ -97,7 +103,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   app.post<{ Params: { id: string } }>(
     "/matches/:id/undo",
     async (request, reply) => {
-      const match = matches.get(request.params.id);
+      const match = matchRepository.findById(request.params.id);
       if (!match) return reply.code(404).send({ error: "Match not found." });
 
       try {
@@ -112,7 +118,7 @@ export async function buildApp(): Promise<FastifyInstance> {
           winner,
           status: winner ? "complete" : "in_progress",
         };
-        matches.set(match.id, updated);
+        matchRepository.save(updated);
         return updated;
       } catch (caught) {
         const error =

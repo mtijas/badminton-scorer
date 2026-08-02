@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import type { FastifyInstance } from "fastify";
 import type { MatchState, Side } from "@badminton-scorer/shared";
 import { buildApp } from "./app.js";
+import type { MatchRepository } from "./repositories/match-repository.js";
 
 const whitespaceOnlyNameCases = [
   {
@@ -71,6 +72,34 @@ describe("match API", () => {
       status: "in_progress",
       winner: null,
     });
+  });
+
+  it("uses an injected match repository to store and retrieve matches", async () => {
+    // Arrange
+    const storedMatches = new Map<string, MatchState>();
+    const matchRepository: MatchRepository = {
+      findById: (id) => storedMatches.get(id),
+      save: (match) => storedMatches.set(match.id, match),
+    };
+    const app = await buildApp({ matchRepository });
+    apps.push(app);
+
+    // Act
+    const createResponse = await app.inject({
+      method: "POST",
+      url: "/matches",
+      payload: validMatchRequest,
+    });
+    const match = createResponse.json<MatchState>();
+    const getResponse = await app.inject({
+      method: "GET",
+      url: `/matches/${match.id}`,
+    });
+
+    // Assert
+    expect(createResponse.statusCode).toBe(201);
+    expect(storedMatches.get(match.id)).toEqual(match);
+    expect(getResponse.json()).toEqual(match);
   });
 
   it("returns serving side and point history after recording a point", async () => {
