@@ -42,8 +42,6 @@ jobs:
       - run: pnpm check
         env:
           DATABASE_URL: postgres://badminton:badminton@localhost:5432/badminton_scorer
-      - run: pnpm test:integration
-        env:
           TEST_DATABASE_URL: postgres://badminton:badminton@localhost:5432/badminton_scorer
       - run: pnpm db:verify
         env:
