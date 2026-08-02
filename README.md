@@ -9,7 +9,7 @@ The initial product scope is players, matches, point recording, game/match winne
 - React + Vite web client
 - Fastify API
 - TypeScript shared scoring domain
-- PostgreSQL schema with forward-only migrations; the API still uses in-memory storage until the repository migration
+- PostgreSQL persistence with forward-only migrations and append-only rally history
 
 ## Getting started
 
@@ -22,7 +22,9 @@ npm install --global pnpm@11.9.0
 Docker uses the same direct installation because the Corepack version bundled with the Node image can have outdated npm signing-key metadata.
 
 ```sh
+docker compose up -d database
 pnpm install
+pnpm db:migrate
 pnpm dev
 ```
 
@@ -51,6 +53,5 @@ pnpm exec playwright install chromium
 
 Copy `.env.example` to `.env` only when overriding the local defaults.
 
-Start PostgreSQL with `docker compose up -d database`, then run `pnpm db:migrate`
-to initialise a local database. The API continues using in-memory storage until
-the PostgreSQL repository is introduced.
+The API requires PostgreSQL. Start it with `docker compose up -d database`, then
+run `pnpm db:migrate` before `pnpm dev`, `pnpm test:e2e`, or `pnpm check`.

@@ -20,6 +20,10 @@ services:
       - "3000:3000"
     environment:
       WEB_ORIGIN: http://localhost:5173
+      DATABASE_URL: postgres://badminton:badminton@database:5432/badminton_scorer
+    depends_on:
+      database:
+        condition: service_healthy
   web:
     build:
       context: .

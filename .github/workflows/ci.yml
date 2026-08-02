@@ -36,8 +36,10 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm check
       - run: pnpm db:migrate
+        env:
+          DATABASE_URL: postgres://badminton:badminton@localhost:5432/badminton_scorer
+      - run: pnpm check
         env:
           DATABASE_URL: postgres://badminton:badminton@localhost:5432/badminton_scorer
       - run: pnpm db:verify

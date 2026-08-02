@@ -13,6 +13,9 @@ export default defineConfig({
       reuseExistingServer: true,
       env: {
         WEB_ORIGIN: "http://localhost:5173",
+        DATABASE_URL:
+          process.env.DATABASE_URL ??
+          "postgres://badminton:badminton@localhost:5432/badminton_scorer",
       },
     },
     {

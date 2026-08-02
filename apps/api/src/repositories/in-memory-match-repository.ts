@@ -4,11 +4,11 @@ import type { MatchRepository } from "./match-repository.js";
 export class InMemoryMatchRepository implements MatchRepository {
   private readonly matches = new Map<string, MatchState>();
 
-  findById(id: string): MatchState | undefined {
+  async findById(id: string): Promise<MatchState | undefined> {
     return this.matches.get(id);
   }
 
-  save(match: MatchState): void {
+  async save(match: MatchState): Promise<void> {
     this.matches.set(match.id, match);
   }
 }

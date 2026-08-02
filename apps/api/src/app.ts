@@ -59,14 +59,14 @@ export async function buildApp({
       status: "in_progress",
       winner: null,
     };
-    matchRepository.save(match);
+    await matchRepository.save(match);
     return reply.code(201).send(match);
   });
 
   app.get<{ Params: { id: string } }>(
     "/matches/:id",
     async (request, reply) => {
-      const match = matchRepository.findById(request.params.id);
+      const match = await matchRepository.findById(request.params.id);
       return match
         ? match
         : reply.code(404).send({ error: "Match not found." });
@@ -76,7 +76,7 @@ export async function buildApp({
   app.post<{ Params: { id: string }; Body: { side: Side } }>(
     "/matches/:id/points",
     async (request, reply) => {
-      const match = matchRepository.findById(request.params.id);
+      const match = await matchRepository.findById(request.params.id);
       if (!match) return reply.code(404).send({ error: "Match not found." });
       if (request.body?.side !== "home" && request.body?.side !== "away") {
         return reply.code(400).send({ error: "side must be home or away." });
@@ -95,7 +95,7 @@ export async function buildApp({
         winner,
         status: winner ? "complete" : "in_progress",
       };
-      matchRepository.save(updated);
+      await matchRepository.save(updated);
       return updated;
     },
   );
@@ -103,7 +103,7 @@ export async function buildApp({
   app.post<{ Params: { id: string } }>(
     "/matches/:id/undo",
     async (request, reply) => {
-      const match = matchRepository.findById(request.params.id);
+      const match = await matchRepository.findById(request.params.id);
       if (!match) return reply.code(404).send({ error: "Match not found." });
 
       try {
@@ -118,7 +118,7 @@ export async function buildApp({
           winner,
           status: winner ? "complete" : "in_progress",
         };
-        matchRepository.save(updated);
+        await matchRepository.save(updated);
         return updated;
       } catch (caught) {
         const error =
