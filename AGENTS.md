@@ -69,10 +69,22 @@ Document the canonical development, test, lint, and Docker commands in `README.m
 
 Dependencies should flow in this direction:
 
-UI → application services → scoring domain
-→ persistence
+- UI 
+  - application services 
+    - scoring domain
+    - persistence
 
 The scoring domain must not depend on UI or persistence.
+
+Before making architectural changes, read every ADR under `/docs/adr`.
+
+The ADRs are authoritative.
+
+If a requested change conflicts with an accepted ADR:
+
+1. Explain the conflict.
+2. Do not silently ignore the ADR.
+3. Recommend creating a new ADR if the architecture should change.
 
 ## Naming
 
