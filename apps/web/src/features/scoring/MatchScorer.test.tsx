@@ -252,6 +252,40 @@ describe("match scoring workflow", () => {
     expect(screen.getByRole("button", { name: "Start match" })).toBeTruthy();
   });
 
+  it("keeps the match visible when abandoning is cancelled", async () => {
+    // Arrange
+    vi.mocked(createMatch).mockResolvedValue(startingMatch);
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: "Start match" }));
+    await screen.findByRole("heading", { name: "Live match" });
+
+    // Act
+    fireEvent.click(screen.getByRole("button", { name: "Abandon match" }));
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+    // Assert
+    expect(screen.getByRole("heading", { name: "Live match" })).toBeTruthy();
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("returns to match setup after abandonment is confirmed", async () => {
+    // Arrange
+    vi.mocked(createMatch).mockResolvedValue(startingMatch);
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: "Start match" }));
+    await screen.findByRole("heading", { name: "Live match" });
+
+    // Act
+    fireEvent.click(screen.getByRole("button", { name: "Abandon match" }));
+    fireEvent.click(screen.getByRole("button", { name: "Yes, abandon match" }));
+
+    // Assert
+    expect(
+      screen.getByRole("heading", { name: "Badminton Scorer" }),
+    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Start match" })).toBeTruthy();
+  });
+
   it("undoes the latest point from the visible scoring controls", async () => {
     // Arrange
     const matchAfterPoint: MatchState = {

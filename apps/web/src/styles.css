@@ -115,6 +115,18 @@ article button {
   gap: 0.75rem;
   margin-top: 1.25rem;
 }
+.confirmation-dialog {
+  max-width: 28rem;
+  margin: 1.5rem auto 0;
+  padding: 1rem;
+  border: 1px solid #9fb3c8;
+  border-radius: 0.4rem;
+  background: #f0f4f8;
+}
+.confirmation-dialog h2,
+.confirmation-dialog p {
+  margin-top: 0;
+}
 .game-history {
   margin-top: 2rem;
   text-align: left;

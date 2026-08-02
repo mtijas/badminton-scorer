@@ -1,4 +1,4 @@
-import { type ReactElement } from "react";
+import { type ReactElement, useState } from "react";
 import {
   gamesWon,
   previousCompletedGames,
@@ -50,6 +50,8 @@ function LiveMatch({
   isUpdatingScore,
   onNewMatch,
 }: LiveMatchProps): ReactElement {
+  const [isAbandonConfirmationOpen, setIsAbandonConfirmationOpen] =
+    useState(false);
   const score = match.games.at(-1);
   if (!score)
     return (
@@ -112,10 +114,30 @@ function LiveMatch({
         >
           Undo last point
         </button>
+        <button onClick={() => setIsAbandonConfirmationOpen(true)}>
+          Abandon match
+        </button>
         {match.status === "complete" && (
           <button onClick={onNewMatch}>New match</button>
         )}
       </div>
+      {isAbandonConfirmationOpen && (
+        <div
+          aria-labelledby="abandon-match-title"
+          aria-modal="true"
+          className="confirmation-dialog"
+          role="dialog"
+        >
+          <h2 id="abandon-match-title">Abandon this match?</h2>
+          <p>Are you sure you want to abandon this match?</p>
+          <div className="match-actions">
+            <button onClick={() => setIsAbandonConfirmationOpen(false)}>
+              Cancel
+            </button>
+            <button onClick={onNewMatch}>Yes, abandon match</button>
+          </div>
+        </div>
+      )}
       {previousGames.length > 0 && (
         <div className="game-history">
           <h2>Previous games</h2>

@@ -44,3 +44,18 @@ test("uses the scorer's selected first server", async ({ page }) => {
   // Assert
   await expect(page.getByLabel("Player two is serving")).toBeVisible();
 });
+
+test("abandons a match after confirmation", async ({ page }) => {
+  // Arrange
+  await page.goto("/");
+  await page.getByRole("button", { name: "Start match" }).click();
+
+  // Act
+  await page.getByRole("button", { name: "Abandon match" }).click();
+  await page.getByRole("button", { name: "Yes, abandon match" }).click();
+
+  // Assert
+  await expect(
+    page.getByRole("heading", { name: "Badminton Scorer" }),
+  ).toBeVisible();
+});
