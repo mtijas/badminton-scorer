@@ -16,6 +16,7 @@ export interface ScoringState {
   readonly initialServer: Side;
   readonly scoringSystem: ScoringSystem;
   readonly servingSide: Side;
+  readonly endsChangeDue: boolean;
   readonly games: readonly GameScore[];
   readonly pointHistory: readonly Side[];
 }

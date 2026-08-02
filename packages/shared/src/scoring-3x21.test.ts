@@ -199,7 +199,26 @@ describe("3x21 badminton scoring", () => {
 
     // Assert
     expect(updatedState.servingSide).toBe("away");
+    expect(updatedState.endsChangeDue).toBe(false);
     expect(updatedState.games).toEqual([{ home: 0, away: 1 }]);
+  });
+
+  it("exposes the ends-change state after a game-winning rally", () => {
+    // Arrange
+    const gamePointRallies = [
+      ...Array<Side>(20).fill("home"),
+      ...Array<Side>(15).fill("away"),
+    ];
+    const gamePointState = gamePointRallies.reduce(
+      recordRally,
+      createScoringState("home", scoringSystem),
+    );
+
+    // Act
+    const updatedState = recordRally(gamePointState, "home");
+
+    // Assert
+    expect(updatedState.endsChangeDue).toBe(true);
   });
 
   it("undoes the latest rally and restores the prior server", () => {

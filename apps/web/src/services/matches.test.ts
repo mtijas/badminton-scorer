@@ -9,6 +9,7 @@ const match: MatchState = {
   initialServer: "home",
   scoringSystem: "3x21",
   servingSide: "home",
+  endsChangeDue: false,
   games: [{ home: 0, away: 0 }],
   pointHistory: [],
   status: "in_progress",

@@ -55,6 +55,7 @@ Removes the latest recorded point and returns the updated match object. This end
   "initialServer": "home",
   "scoringSystem": "3x21",
   "servingSide": "away",
+  "endsChangeDue": false,
   "games": [{ "home": 21, "away": 18 }],
   "pointHistory": ["home", "away", "away"],
   "status": "in_progress",
@@ -62,4 +63,4 @@ Removes the latest recorded point and returns the updated match object. This end
 }
 ```
 
-`servingSide` is the side that serves the next rally. `pointHistory` lists the side that won each recorded rally in order; together with `initialServer` and `scoringSystem`, it supports deterministic score replay and undo.
+`servingSide` is the side that serves the next rally. `endsChangeDue` is true immediately after a required change of ends: after game 1, at the start of a deciding third game, or when a side first reaches 11 points in a 3x21 deciding game (8 points in 3x15). `pointHistory` lists the side that won each recorded rally in order; together with `initialServer` and `scoringSystem`, it supports deterministic score replay and undo.

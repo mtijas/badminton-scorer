@@ -125,6 +125,7 @@ export function createScoringState(
     initialServer,
     scoringSystem,
     servingSide: initialServer,
+    endsChangeDue: false,
     games: [{ home: 0, away: 0 }],
     pointHistory: [],
   };
@@ -134,11 +135,14 @@ export function recordRally(
   state: ScoringState,
   rallyWinner: Side,
 ): ScoringState {
+  const games = recordPoint(state.games, rallyWinner, state.scoringSystem);
+
   return {
     initialServer: state.initialServer,
     scoringSystem: state.scoringSystem,
     servingSide: rallyWinner,
-    games: recordPoint(state.games, rallyWinner, state.scoringSystem),
+    endsChangeDue: isEndsChangeDue(games, state.scoringSystem),
+    games,
     pointHistory: [...state.pointHistory, rallyWinner],
   };
 }

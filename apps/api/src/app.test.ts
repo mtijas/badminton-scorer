@@ -67,6 +67,7 @@ describe("match API", () => {
       initialServer: "away",
       scoringSystem: "3x15",
       servingSide: "away",
+      endsChangeDue: false,
       games: [{ home: 0, away: 0 }],
       pointHistory: [],
       status: "in_progress",
@@ -125,8 +126,34 @@ describe("match API", () => {
     expect(createResponse.statusCode).toBe(201);
     expect(updatedMatch.initialServer).toBe("home");
     expect(updatedMatch.servingSide).toBe("away");
+    expect(updatedMatch.endsChangeDue).toBe(false);
     expect(updatedMatch.games).toEqual([{ home: 0, away: 1 }]);
     expect(updatedMatch.pointHistory).toEqual(["away"]);
+  });
+
+  it("returns an ends-change state after a game-winning point", async () => {
+    // Arrange
+    const app = await buildApp();
+    apps.push(app);
+    const createResponse = await app.inject({
+      method: "POST",
+      url: "/matches",
+      payload: { ...validMatchRequest, scoringSystem: "3x15" },
+    });
+    const match = createResponse.json<MatchState>();
+    await recordRallies(app, match.id, Array<Side>(14).fill("home"));
+
+    // Act
+    const response = await app.inject({
+      method: "POST",
+      url: `/matches/${match.id}/points`,
+      payload: { side: "home" },
+    });
+    const updatedMatch = response.json<MatchState>();
+
+    // Assert
+    expect(response.statusCode).toBe(200);
+    expect(updatedMatch.endsChangeDue).toBe(true);
   });
 
   it.each(whitespaceOnlyNameCases)(
