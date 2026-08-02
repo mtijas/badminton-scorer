@@ -46,24 +46,6 @@ pnpm db:migrate # apply forward-only PostgreSQL migrations (requires DATABASE_UR
 pnpm db:verify # verify PostgreSQL integrity constraints (requires DATABASE_URL)
 ```
 
-## Ralph Wiggum autonomous loop
-
-The project uses Ralph Wiggum for specification-driven autonomous work. Write
-numbered, root-level Markdown specifications in `specs/` with concrete,
-testable acceptance criteria, then run the Codex loop:
-
-```sh
-./scripts/ralph-loop-codex.sh 20 # run at most 20 iterations
-./scripts/ralph-loop-codex.sh    # run until stopped or all work is complete
-./scripts/ralph-loop-codex.sh plan # create/update IMPLEMENTATION_PLAN.md only
-```
-
-The loop runs Codex with its approvals and sandbox bypassed, and agents commit
-and push completed work automatically. Review the specification and current
-working tree before starting it. The project rules are in `AGENTS.md`; Ralph
-settings and completion-log requirements are in
-`.specify/memory/constitution.md`.
-
 Install the Chromium browser once before running the browser test locally:
 
 ```sh
