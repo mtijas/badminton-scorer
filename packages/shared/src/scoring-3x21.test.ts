@@ -266,6 +266,27 @@ describe("3x21 badminton scoring", () => {
     expect(updatedState.endsChangeDue).toBe(true);
   });
 
+  it("clears the deciding-game ends-change state when its triggering rally is undone", () => {
+    // Arrange
+    const stateWithEndsChangeDue = [
+      ...Array<Side>(21).fill("home"),
+      ...Array<Side>(21).fill("away"),
+      ...Array<Side>(11).fill("home"),
+    ].reduce(recordRally, createScoringState("home", scoringSystem));
+
+    // Act
+    const revertedState = undoRally(stateWithEndsChangeDue);
+
+    // Assert
+    expect(stateWithEndsChangeDue.endsChangeDue).toBe(true);
+    expect(revertedState.endsChangeDue).toBe(false);
+    expect(revertedState.games).toEqual([
+      { home: 21, away: 0 },
+      { home: 0, away: 21 },
+      { home: 10, away: 0 },
+    ]);
+  });
+
   it("undoes the latest rally and restores the prior server", () => {
     // Arrange
     const initialState = createScoringState("home", scoringSystem);

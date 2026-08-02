@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { gameWinner, isEndsChangeDue, recordPoint } from "./scoring.js";
+import {
+  createScoringState,
+  gameWinner,
+  isEndsChangeDue,
+  recordPoint,
+  recordRally,
+  undoRally,
+} from "./scoring.js";
+import type { Side } from "./types.js";
 
 const scoringSystem = "3x15" as const;
 
@@ -33,6 +41,47 @@ describe("3x15 badminton scoring", () => {
       { home: 15, away: 9 },
       { home: 0, away: 0 },
     ]);
+  });
+
+  it("requires an ends change after the first completed game", () => {
+    // Arrange
+    const games = [
+      { home: 15, away: 12 },
+      { home: 0, away: 0 },
+    ];
+
+    // Act
+    const endsChangeDue = isEndsChangeDue(games, scoringSystem);
+
+    // Assert
+    expect(endsChangeDue).toBe(true);
+  });
+
+  it("requires an ends change after the second game only when a third game starts", () => {
+    // Arrange
+    const thirdGameStarts = [
+      { home: 15, away: 12 },
+      { home: 12, away: 15 },
+      { home: 0, away: 0 },
+    ];
+    const matchIsComplete = [
+      { home: 15, away: 12 },
+      { home: 15, away: 12 },
+    ];
+
+    // Act
+    const endsChangeBeforeThirdGame = isEndsChangeDue(
+      thirdGameStarts,
+      scoringSystem,
+    );
+    const endsChangeAfterCompleteMatch = isEndsChangeDue(
+      matchIsComplete,
+      scoringSystem,
+    );
+
+    // Assert
+    expect(endsChangeBeforeThirdGame).toBe(true);
+    expect(endsChangeAfterCompleteMatch).toBe(false);
   });
 
   it("requires an ends change after 8 points in the deciding game", () => {
@@ -93,5 +142,26 @@ describe("3x15 badminton scoring", () => {
 
     // Assert
     expect(endsChangeDue).toBe(false);
+  });
+
+  it("clears the deciding-game ends-change state when its triggering rally is undone", () => {
+    // Arrange
+    const stateWithEndsChangeDue = [
+      ...Array<Side>(15).fill("home"),
+      ...Array<Side>(15).fill("away"),
+      ...Array<Side>(8).fill("home"),
+    ].reduce(recordRally, createScoringState("home", scoringSystem));
+
+    // Act
+    const revertedState = undoRally(stateWithEndsChangeDue);
+
+    // Assert
+    expect(stateWithEndsChangeDue.endsChangeDue).toBe(true);
+    expect(revertedState.endsChangeDue).toBe(false);
+    expect(revertedState.games).toEqual([
+      { home: 15, away: 0 },
+      { home: 0, away: 15 },
+      { home: 7, away: 0 },
+    ]);
   });
 });
