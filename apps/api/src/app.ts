@@ -2,9 +2,6 @@ import cors from "@fastify/cors";
 import Fastify, { type FastifyInstance } from "fastify";
 import {
   createScoringState,
-  matchWinner,
-  recordRally,
-  undoRally,
   type MatchState,
   type ScoringSystem,
   type Side,
@@ -59,7 +56,7 @@ export async function buildApp({
       status: "in_progress",
       winner: null,
     };
-    await matchRepository.save(match);
+    await matchRepository.create(match);
     return reply.code(201).send(match);
   });
 
@@ -76,50 +73,37 @@ export async function buildApp({
   app.post<{ Params: { id: string }; Body: { side: Side } }>(
     "/matches/:id/points",
     async (request, reply) => {
-      const match = await matchRepository.findById(request.params.id);
-      if (!match) return reply.code(404).send({ error: "Match not found." });
       if (request.body?.side !== "home" && request.body?.side !== "away") {
         return reply.code(400).send({ error: "side must be home or away." });
       }
-      if (match.status === "complete")
-        return reply.code(409).send({ error: "Match is already complete." });
-
-      const scoringState = recordRally(match, request.body.side);
-      const winner = matchWinner(
-        scoringState.games,
-        scoringState.scoringSystem,
-      );
-      const updated: MatchState = {
-        ...match,
-        ...scoringState,
-        winner,
-        status: winner ? "complete" : "in_progress",
-      };
-      await matchRepository.save(updated);
-      return updated;
+      try {
+        const updated = await matchRepository.recordPoint(
+          request.params.id,
+          request.body.side,
+        );
+        return updated
+          ? updated
+          : reply.code(404).send({ error: "Match not found." });
+      } catch (caught) {
+        const error =
+          caught instanceof Error
+            ? caught.message
+            : "Unable to record the point.";
+        return reply.code(409).send({ error });
+      }
     },
   );
 
   app.post<{ Params: { id: string } }>(
     "/matches/:id/undo",
     async (request, reply) => {
-      const match = await matchRepository.findById(request.params.id);
-      if (!match) return reply.code(404).send({ error: "Match not found." });
-
       try {
-        const scoringState = undoRally(match);
-        const winner = matchWinner(
-          scoringState.games,
-          scoringState.scoringSystem,
+        const updated = await matchRepository.undoLatestRally(
+          request.params.id,
         );
-        const updated: MatchState = {
-          ...match,
-          ...scoringState,
-          winner,
-          status: winner ? "complete" : "in_progress",
-        };
-        await matchRepository.save(updated);
-        return updated;
+        return updated
+          ? updated
+          : reply.code(404).send({ error: "Match not found." });
       } catch (caught) {
         const error =
           caught instanceof Error

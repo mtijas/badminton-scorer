@@ -144,4 +144,63 @@ describeWithDatabase("PostgresMatchRepository", () => {
       },
     ]);
   });
+
+  it("serializes concurrent point commands without losing either rally", async () => {
+    // Arrange
+    const app = await buildApp({
+      matchRepository: new PostgresMatchRepository(pool),
+    });
+    apps.push(app);
+    const createResponse = await app.inject({
+      method: "POST",
+      url: "/matches",
+      payload: {
+        homePlayer: "Aino",
+        awayPlayer: "Kai",
+        initialServer: "home",
+        scoringSystem: "3x21",
+      },
+    });
+    const match = createResponse.json<MatchState>();
+
+    // Act
+    const responses = await Promise.all([
+      app.inject({
+        method: "POST",
+        url: `/matches/${match.id}/points`,
+        payload: { side: "home" },
+      }),
+      app.inject({
+        method: "POST",
+        url: `/matches/${match.id}/points`,
+        payload: { side: "away" },
+      }),
+    ]);
+    const reloaded = await new PostgresMatchRepository(pool).findById(match.id);
+    const events = await pool.query<{
+      readonly event_sequence: number;
+      readonly awarded_side: "home" | "away";
+    }>(
+      `SELECT event_sequence, awarded_side
+       FROM score_events
+       WHERE match_id = $1
+       ORDER BY event_sequence`,
+      [match.id],
+    );
+
+    // Assert
+    expect(responses.map((response) => response.statusCode)).toEqual([
+      200, 200,
+    ]);
+    expect(reloaded?.pointHistory).toHaveLength(2);
+    expect(reloaded?.games).toEqual([{ home: 1, away: 1 }]);
+    expect(events.rows).toEqual([
+      { event_sequence: 1, awarded_side: expect.any(String) },
+      { event_sequence: 2, awarded_side: expect.any(String) },
+    ]);
+    expect(events.rows.map((event) => event.awarded_side).sort()).toEqual([
+      "away",
+      "home",
+    ]);
+  });
 });

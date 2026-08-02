@@ -1,6 +1,8 @@
-import type { MatchState } from "@badminton-scorer/shared";
+import type { MatchState, Side } from "@badminton-scorer/shared";
 
 export interface MatchRepository {
+  create(match: MatchState): Promise<void>;
   findById(id: string): Promise<MatchState | undefined>;
-  save(match: MatchState): Promise<void>;
+  recordPoint(id: string, side: Side): Promise<MatchState | undefined>;
+  undoLatestRally(id: string): Promise<MatchState | undefined>;
 }

@@ -3,6 +3,7 @@ import {
   gameWinner,
   matchWinner,
   recordRally,
+  undoRally,
   type MatchState,
   type ScoringState,
   type Side,
@@ -45,20 +46,63 @@ export class PostgresMatchRepository implements MatchRepository {
     }
   }
 
-  public async save(match: MatchState): Promise<void> {
+  public async create(match: MatchState): Promise<void> {
     const client = await this.pool.connect();
     try {
       await client.query("BEGIN");
-      const existing = await loadMatch(client, match.id, true);
+      await insertMatch(client, match);
+      await client.query("COMMIT");
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
 
-      if (existing) {
-        await appendScoreEvent(client, existing, match);
-        await syncProjection(client, match);
-      } else {
-        await insertMatch(client, match);
+  public async recordPoint(
+    id: string,
+    side: Side,
+  ): Promise<MatchState | undefined> {
+    return this.runWriteCommand(id, async (client, match) => {
+      if (match.status === "complete") {
+        throw new Error("Match is already complete.");
       }
 
+      const scoringState = recordRally(match, side);
+      const updated = withScoringState(match, scoringState);
+      await appendAwardEvent(client, match, side);
+      await syncProjection(client, updated);
+      return updated;
+    });
+  }
+
+  public async undoLatestRally(id: string): Promise<MatchState | undefined> {
+    return this.runWriteCommand(id, async (client, match) => {
+      const scoringState = undoRally(match);
+      const updated = withScoringState(match, scoringState);
+      await appendReversalEvent(client, match.id);
+      await syncProjection(client, updated);
+      return updated;
+    });
+  }
+
+  private async runWriteCommand(
+    id: string,
+    command: (client: PoolClient, match: MatchState) => Promise<MatchState>,
+  ): Promise<MatchState | undefined> {
+    const client = await this.pool.connect();
+    try {
+      await client.query("BEGIN");
+      const match = await loadMatch(client, id, true);
+      if (!match) {
+        await client.query("COMMIT");
+        return undefined;
+      }
+
+      const updated = await command(client, match);
       await client.query("COMMIT");
+      return updated;
     } catch (error) {
       await client.query("ROLLBACK");
       throw error;
@@ -200,40 +244,38 @@ async function insertSideAndPlayer(
   );
 }
 
-async function appendScoreEvent(
+function withScoringState(
+  match: MatchState,
+  scoringState: ScoringState,
+): MatchState {
+  const winner = matchWinner(scoringState.games, scoringState.scoringSystem);
+  return {
+    ...match,
+    ...scoringState,
+    winner,
+    status: winner ? "complete" : "in_progress",
+  };
+}
+
+async function appendAwardEvent(
   client: PoolClient,
-  previous: MatchState,
-  next: MatchState,
+  match: MatchState,
+  awardedSide: Side,
 ): Promise<void> {
-  const pointDifference =
-    next.pointHistory.length - previous.pointHistory.length;
-  if (pointDifference === 0) return;
-  if (pointDifference !== 1 && pointDifference !== -1) {
-    throw new Error("Match updates must add or undo exactly one rally.");
-  }
-
-  const sequenceResult = await client.query<{ event_sequence: number }>(
-    `SELECT COALESCE(MAX(event_sequence), 0) + 1 AS event_sequence
-     FROM score_events
-     WHERE match_id = $1`,
-    [next.id],
+  const eventSequence = await nextEventSequence(client, match.id);
+  const game = await findGame(client, match.id, match.games.length);
+  await client.query(
+    `INSERT INTO score_events (match_id, game_id, event_sequence, event_type, awarded_side)
+     VALUES ($1, $2, $3, 'rally_awarded', $4)`,
+    [match.id, game.id, eventSequence, awardedSide],
   );
-  const eventSequence = sequenceResult.rows[0]?.event_sequence;
-  if (eventSequence === undefined)
-    throw new Error("Unable to sequence score event.");
+}
 
-  if (pointDifference === 1) {
-    const awardedSide = next.pointHistory.at(-1);
-    if (!awardedSide) throw new Error("Missing awarded side for rally.");
-    const game = await findGame(client, next.id, previous.games.length);
-    await client.query(
-      `INSERT INTO score_events (match_id, game_id, event_sequence, event_type, awarded_side)
-       VALUES ($1, $2, $3, 'rally_awarded', $4)`,
-      [next.id, game.id, eventSequence, awardedSide],
-    );
-    return;
-  }
-
+async function appendReversalEvent(
+  client: PoolClient,
+  matchId: string,
+): Promise<void> {
+  const eventSequence = await nextEventSequence(client, matchId);
   const awardResult = await client.query<ScoreEventRow>(
     `SELECT awarded.id, awarded.event_type, awarded.awarded_side, awarded.reversed_event_id
      FROM score_events AS awarded
@@ -245,16 +287,33 @@ async function appendScoreEvent(
        )
      ORDER BY awarded.event_sequence DESC
      LIMIT 1`,
-    [next.id],
+    [matchId],
   );
   const award = awardResult.rows[0];
   if (!award) throw new Error("There is no stored rally to undo.");
-  const game = await findGameForEvent(client, next.id, award.id);
+  const game = await findGameForEvent(client, matchId, award.id);
   await client.query(
     `INSERT INTO score_events (match_id, game_id, event_sequence, event_type, reversed_event_id)
      VALUES ($1, $2, $3, 'rally_reversed', $4)`,
-    [next.id, game.id, eventSequence, award.id],
+    [matchId, game.id, eventSequence, award.id],
   );
+}
+
+async function nextEventSequence(
+  client: PoolClient,
+  matchId: string,
+): Promise<number> {
+  const sequenceResult = await client.query<{ event_sequence: number }>(
+    `SELECT COALESCE(MAX(event_sequence), 0) + 1 AS event_sequence
+     FROM score_events
+     WHERE match_id = $1`,
+    [matchId],
+  );
+  const eventSequence = sequenceResult.rows[0]?.event_sequence;
+  if (eventSequence === undefined) {
+    throw new Error("Unable to sequence score event.");
+  }
+  return eventSequence;
 }
 
 async function findGame(

@@ -79,10 +79,12 @@ describe("match API", () => {
     // Arrange
     const storedMatches = new Map<string, MatchState>();
     const matchRepository: MatchRepository = {
-      findById: async (id) => storedMatches.get(id),
-      save: async (match) => {
+      create: async (match) => {
         storedMatches.set(match.id, match);
       },
+      findById: async (id) => storedMatches.get(id),
+      recordPoint: async () => undefined,
+      undoLatestRally: async () => undefined,
     };
     const app = await buildApp({ matchRepository });
     apps.push(app);
