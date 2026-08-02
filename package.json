@@ -17,7 +17,8 @@
     "format:check": "prettier . --check",
     "test": "pnpm --filter @badminton-scorer/shared build && vitest run",
     "test:e2e": "playwright test",
-    "db:migrate": "node-pg-migrate up --migrations-dir database/migrations --database-url-var DATABASE_URL"
+    "db:migrate": "node-pg-migrate up --migrations-dir database/migrations --database-url-var DATABASE_URL",
+    "db:verify": "node database/verify-integrity.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
@@ -29,6 +30,7 @@
     "eslint-config-prettier": "^10.0.0",
     "eslint-plugin-react-hooks": "^5.0.0",
     "node-pg-migrate": "^8.0.4",
+    "pg": "^8.22.0",
     "prettier": "^3.0.0",
     "typescript-eslint": "^8.0.0",
     "vitest": "^2.0.0"

@@ -40,6 +40,7 @@ pnpm test    # run shared scoring-rule tests
 pnpm test:e2e # run the Playwright browser scoring smoke test
 pnpm lint    # lint all JavaScript and TypeScript files
 pnpm db:migrate # apply forward-only PostgreSQL migrations (requires DATABASE_URL)
+pnpm db:verify # verify PostgreSQL integrity constraints (requires DATABASE_URL)
 ```
 
 Install the Chromium browser once before running the browser test locally:

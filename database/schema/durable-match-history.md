@@ -18,7 +18,13 @@ references exactly one earlier award in the same match. Events are ordered by a
 unique match-local sequence number, may not be updated or deleted, and are
 replayed by application code using the shared scoring domain.
 
+The schema requires exactly one `home` and one `away` side per match, each with
+one or two players. A deferred constraint trigger allows the repository to
+create that composition atomically. It also permits at most one in-progress
+game projection and requires every earlier game projection to be complete.
+
 The schema enforces references, payload shape, score bounds, one reversal per
-award, and game/match status consistency. The future PostgreSQL repository is
+award, and game/match status consistency. A reversal must target an earlier
+awarded rally in the same match and game. The future PostgreSQL repository is
 responsible for atomically inserting an event and updating the `games` and
 `matches` projections.

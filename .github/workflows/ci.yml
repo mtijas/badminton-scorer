@@ -14,6 +14,8 @@ jobs:
     services:
       database:
         image: postgres:16-alpine
+        ports:
+          - 5432:5432
         env:
           POSTGRES_DB: badminton_scorer
           POSTGRES_USER: badminton
@@ -36,5 +38,8 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm check
       - run: pnpm db:migrate
+        env:
+          DATABASE_URL: postgres://badminton:badminton@localhost:5432/badminton_scorer
+      - run: pnpm db:verify
         env:
           DATABASE_URL: postgres://badminton:badminton@localhost:5432/badminton_scorer

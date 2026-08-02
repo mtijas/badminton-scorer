@@ -35,6 +35,9 @@ importers:
       node-pg-migrate:
         specifier: ^8.0.4
         version: 8.0.4(pg@8.22.0)
+      pg:
+        specifier: ^8.22.0
+        version: 8.22.0
       prettier:
         specifier: ^3.0.0
         version: 3.9.6
