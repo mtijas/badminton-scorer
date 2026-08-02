@@ -15,10 +15,15 @@ Creates an in-progress match.
 Request:
 
 ```json
-{ "homePlayer": "Aino", "awayPlayer": "Kai", "initialServer": "home" }
+{
+  "homePlayer": "Aino",
+  "awayPlayer": "Kai",
+  "initialServer": "home",
+  "scoringSystem": "3x21"
+}
 ```
 
-Returns `201` with a match object. Player names must contain at least one non-whitespace character and have a maximum length of 80 characters. `initialServer` must be `home` or `away` and records the serving side selected after the toss.
+Returns `201` with a match object. Player names must contain at least one non-whitespace character and have a maximum length of 80 characters. `initialServer` must be `home` or `away` and records the serving side selected after the toss. `scoringSystem` must be `3x21` or `3x15`.
 
 ## `GET /matches/:id`
 
@@ -48,6 +53,7 @@ Removes the latest recorded point and returns the updated match object. This end
   "homePlayer": "Aino",
   "awayPlayer": "Kai",
   "initialServer": "home",
+  "scoringSystem": "3x21",
   "servingSide": "away",
   "games": [{ "home": 21, "away": 18 }],
   "pointHistory": ["home", "away", "away"],
@@ -56,4 +62,4 @@ Removes the latest recorded point and returns the updated match object. This end
 }
 ```
 
-`servingSide` is the side that serves the next rally. `pointHistory` lists the side that won each recorded rally in order; together with `initialServer`, it supports deterministic score replay and undo.
+`servingSide` is the side that serves the next rally. `pointHistory` lists the side that won each recorded rally in order; together with `initialServer` and `scoringSystem`, it supports deterministic score replay and undo.

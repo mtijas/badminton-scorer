@@ -63,11 +63,17 @@ function LiveMatch({
   const winnerName =
     match.winner === "home" ? match.homePlayer : match.awayPlayer;
   const servingPlayer = match[`${match.servingSide}Player`];
-  const won = gamesWon(match.games);
-  const previousGames = previousCompletedGames(match.games);
+  const won = gamesWon(match.games, match.scoringSystem);
+  const previousGames = previousCompletedGames(
+    match.games,
+    match.scoringSystem,
+  );
   return (
     <main className="scoreboard">
-      <p>Game {match.games.length} · Best of 3</p>
+      <p>
+        Game {match.games.length} · Best of 3 · {match.scoringSystem.slice(2)}
+        -point games
+      </p>
       <h1>
         {match.status === "complete" ? `${winnerName} wins` : "Live match"}
       </h1>
@@ -114,7 +120,10 @@ function LiveMatch({
         >
           Undo last point
         </button>
-        <button onClick={() => setIsAbandonConfirmationOpen(true)}>
+        <button
+          disabled={match.status === "complete"}
+          onClick={() => setIsAbandonConfirmationOpen(true)}
+        >
           Abandon match
         </button>
         {match.status === "complete" && (

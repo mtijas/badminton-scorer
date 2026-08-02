@@ -9,12 +9,14 @@ const whitespaceOnlyNameCases = [
     homePlayer: " \t ",
     awayPlayer: "Kai",
     initialServer: "home",
+    scoringSystem: "3x21",
   },
   {
     player: "away",
     homePlayer: "Aino",
     awayPlayer: "\n ",
     initialServer: "home",
+    scoringSystem: "3x21",
   },
 ] as const;
 
@@ -22,6 +24,7 @@ const validMatchRequest = {
   homePlayer: "Aino",
   awayPlayer: "Kai",
   initialServer: "home",
+  scoringSystem: "3x21",
 } as const;
 
 const homeGameWinningRallies = [
@@ -50,6 +53,7 @@ describe("match API", () => {
         homePlayer: " Aino ",
         awayPlayer: "Kai ",
         initialServer: "away",
+        scoringSystem: "3x15",
       },
     });
 
@@ -60,6 +64,7 @@ describe("match API", () => {
       homePlayer: "Aino",
       awayPlayer: "Kai",
       initialServer: "away",
+      scoringSystem: "3x15",
       servingSide: "away",
       games: [{ home: 0, away: 0 }],
       pointHistory: [],
@@ -97,7 +102,7 @@ describe("match API", () => {
 
   it.each(whitespaceOnlyNameCases)(
     "rejects a whitespace-only $player player name",
-    async ({ homePlayer, awayPlayer, initialServer }) => {
+    async ({ homePlayer, awayPlayer, initialServer, scoringSystem }) => {
       // Arrange
       const app = await buildApp();
       apps.push(app);
@@ -106,7 +111,7 @@ describe("match API", () => {
       const response = await app.inject({
         method: "POST",
         url: "/matches",
-        payload: { homePlayer, awayPlayer, initialServer },
+        payload: { homePlayer, awayPlayer, initialServer, scoringSystem },
       });
 
       // Assert
@@ -128,13 +133,45 @@ describe("match API", () => {
       const response = await app.inject({
         method: "POST",
         url: "/matches",
-        payload: { homePlayer: "Aino", awayPlayer: "Kai", initialServer },
+        payload: {
+          homePlayer: "Aino",
+          awayPlayer: "Kai",
+          initialServer,
+          scoringSystem: "3x21",
+        },
       });
 
       // Assert
       expect(response.statusCode).toBe(400);
       expect(response.json()).toEqual({
         error: "initialServer must be home or away.",
+      });
+    },
+  );
+
+  it.each([undefined, "5x11"] as const)(
+    "rejects an invalid scoring system",
+    async (scoringSystem) => {
+      // Arrange
+      const app = await buildApp();
+      apps.push(app);
+
+      // Act
+      const response = await app.inject({
+        method: "POST",
+        url: "/matches",
+        payload: {
+          homePlayer: "Aino",
+          awayPlayer: "Kai",
+          initialServer: "home",
+          scoringSystem,
+        },
+      });
+
+      // Assert
+      expect(response.statusCode).toBe(400);
+      expect(response.json()).toEqual({
+        error: "scoringSystem must be 3x21 or 3x15.",
       });
     },
   );

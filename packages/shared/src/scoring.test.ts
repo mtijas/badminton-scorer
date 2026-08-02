@@ -11,6 +11,8 @@ import {
 } from "./scoring.js";
 import type { Side } from "./types.js";
 
+const scoringSystem = "3x21" as const;
+
 describe("badminton scoring", () => {
   it("requires a two-point lead after 20-all", () => {
     // Arrange
@@ -18,8 +20,8 @@ describe("badminton scoring", () => {
     const twoPointLead = { home: 22, away: 20 };
 
     // Act
-    const winnerWithOnePointLead = gameWinner(onePointLead);
-    const winnerWithTwoPointLead = gameWinner(twoPointLead);
+    const winnerWithOnePointLead = gameWinner(onePointLead, scoringSystem);
+    const winnerWithTwoPointLead = gameWinner(twoPointLead, scoringSystem);
 
     // Assert
     expect(winnerWithOnePointLead).toBeNull();
@@ -31,10 +33,41 @@ describe("badminton scoring", () => {
     const score = { home: 30, away: 29 };
 
     // Act
-    const winner = gameWinner(score);
+    const winner = gameWinner(score, scoringSystem);
 
     // Assert
     expect(winner).toBe("home");
+  });
+
+  it("uses 15 points with a 21-point cap for the 3x15 system", () => {
+    // Arrange
+    const onePointLead = { home: 15, away: 14 };
+    const twoPointLead = { home: 16, away: 14 };
+    const cappedGame = { home: 21, away: 20 };
+
+    // Act
+    const winnerWithOnePointLead = gameWinner(onePointLead, "3x15");
+    const winnerWithTwoPointLead = gameWinner(twoPointLead, "3x15");
+    const winnerAtCap = gameWinner(cappedGame, "3x15");
+
+    // Assert
+    expect(winnerWithOnePointLead).toBeNull();
+    expect(winnerWithTwoPointLead).toBe("home");
+    expect(winnerAtCap).toBe("home");
+  });
+
+  it("starts the next 3x15 game after the fifteenth point", () => {
+    // Arrange
+    const gamePoint = [{ home: 14, away: 9 }];
+
+    // Act
+    const games = recordPoint(gamePoint, "home", "3x15");
+
+    // Assert
+    expect(games).toEqual([
+      { home: 15, away: 9 },
+      { home: 0, away: 0 },
+    ]);
   });
 
   it("starts the next game as soon as the game-winning point is recorded", () => {
@@ -42,7 +75,7 @@ describe("badminton scoring", () => {
     const gamePoint = [{ home: 20, away: 15 }];
 
     // Act
-    const games = recordPoint(gamePoint, "home");
+    const games = recordPoint(gamePoint, "home", scoringSystem);
 
     // Assert
     expect(games).toEqual([
@@ -60,7 +93,7 @@ describe("badminton scoring", () => {
     ];
 
     // Act
-    const winner = matchWinner(games);
+    const winner = matchWinner(games, scoringSystem);
 
     // Assert
     expect(winner).toBe("home");
@@ -75,7 +108,7 @@ describe("badminton scoring", () => {
     ];
 
     // Act
-    const won = gamesWon(games);
+    const won = gamesWon(games, scoringSystem);
 
     // Assert
     expect(won).toEqual({ home: 1, away: 1 });
@@ -90,7 +123,7 @@ describe("badminton scoring", () => {
     ];
 
     // Act
-    const completedGames = previousCompletedGames(games);
+    const completedGames = previousCompletedGames(games, scoringSystem);
 
     // Assert
     expect(completedGames).toEqual([
@@ -107,7 +140,8 @@ describe("badminton scoring", () => {
     ];
 
     // Act
-    const recordCompletedMatchPoint = () => recordPoint(completedMatch, "away");
+    const recordCompletedMatchPoint = () =>
+      recordPoint(completedMatch, "away", scoringSystem);
 
     // Assert
     expect(recordCompletedMatchPoint).toThrow(
@@ -117,7 +151,7 @@ describe("badminton scoring", () => {
 
   it("changes service to the rally winner", () => {
     // Arrange
-    const state = createScoringState("home");
+    const state = createScoringState("home", scoringSystem);
 
     // Act
     const updatedState = recordRally(state, "away");
@@ -129,7 +163,7 @@ describe("badminton scoring", () => {
 
   it("undoes the latest rally and restores the prior server", () => {
     // Arrange
-    const initialState = createScoringState("home");
+    const initialState = createScoringState("home", scoringSystem);
     const stateAfterRally = recordRally(initialState, "away");
 
     // Act
@@ -148,7 +182,7 @@ describe("badminton scoring", () => {
     ];
     const completedGame = gamePointRallies.reduce(
       recordRally,
-      createScoringState("home"),
+      createScoringState("home", scoringSystem),
     );
 
     // Act
@@ -170,7 +204,7 @@ describe("badminton scoring", () => {
     const completedMatch = [
       ...gameWinningRallies,
       ...gameWinningRallies,
-    ].reduce(recordRally, createScoringState("home"));
+    ].reduce(recordRally, createScoringState("home", scoringSystem));
 
     // Act
     const revertedState = undoRally(completedMatch);
@@ -180,13 +214,13 @@ describe("badminton scoring", () => {
       { home: 21, away: 15 },
       { home: 20, away: 15 },
     ]);
-    expect(matchWinner(revertedState.games)).toBeNull();
+    expect(matchWinner(revertedState.games, scoringSystem)).toBeNull();
     expect(revertedState.servingSide).toBe("away");
   });
 
   it("rejects undo when no rallies have been recorded", () => {
     // Arrange
-    const state = createScoringState("home");
+    const state = createScoringState("home", scoringSystem);
 
     // Act
     const undoWithoutRallies = () => undoRally(state);

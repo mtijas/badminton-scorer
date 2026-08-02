@@ -1,4 +1,4 @@
-import type { MatchState, Side } from "@badminton-scorer/shared";
+import type { MatchState, ScoringSystem, Side } from "@badminton-scorer/shared";
 
 const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
@@ -6,10 +6,16 @@ export async function createMatch(
   homePlayer: string,
   awayPlayer: string,
   initialServer: Side,
+  scoringSystem: ScoringSystem,
 ): Promise<MatchState> {
   return request("/matches", {
     method: "POST",
-    body: JSON.stringify({ homePlayer, awayPlayer, initialServer }),
+    body: JSON.stringify({
+      homePlayer,
+      awayPlayer,
+      initialServer,
+      scoringSystem,
+    }),
   });
 }
 

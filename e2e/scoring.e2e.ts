@@ -45,6 +45,20 @@ test("uses the scorer's selected first server", async ({ page }) => {
   await expect(page.getByLabel("Player two is serving")).toBeVisible();
 });
 
+test("uses the scorer's selected 3x15 scoring system", async ({ page }) => {
+  // Arrange
+  await page.goto("/");
+
+  // Act
+  await page.getByRole("radio", { name: "Best of three, 15 points" }).check();
+  await page.getByRole("button", { name: "Start match" }).click();
+
+  // Assert
+  await expect(
+    page.getByText("Game 1 · Best of 3 · 15-point games"),
+  ).toBeVisible();
+});
+
 test("abandons a match after confirmation", async ({ page }) => {
   // Arrange
   await page.goto("/");

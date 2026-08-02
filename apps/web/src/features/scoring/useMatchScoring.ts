@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import type { MatchState, Side } from "@badminton-scorer/shared";
+import type { MatchState, ScoringSystem, Side } from "@badminton-scorer/shared";
 import { createMatch, recordPoint, undoPoint } from "../../services/matches.js";
 
 export interface MatchScoringController {
@@ -10,6 +10,7 @@ export interface MatchScoringController {
     homePlayer: string,
     awayPlayer: string,
     initialServer: Side,
+    scoringSystem: ScoringSystem,
   ): Promise<void>;
   addPoint(side: Side): Promise<void>;
   undoLastPoint(): Promise<void>;
@@ -26,10 +27,13 @@ export function useMatchScoring(): MatchScoringController {
     homePlayer: string,
     awayPlayer: string,
     initialServer: Side,
+    scoringSystem: ScoringSystem,
   ): Promise<void> {
     try {
       setError(null);
-      setMatch(await createMatch(homePlayer, awayPlayer, initialServer));
+      setMatch(
+        await createMatch(homePlayer, awayPlayer, initialServer, scoringSystem),
+      );
     } catch (caught) {
       setError(messageOf(caught));
     }

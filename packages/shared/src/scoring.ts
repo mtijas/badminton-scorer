@@ -1,30 +1,49 @@
-import type { GameScore, GamesWon, ScoringState, Side } from "./types.js";
+import type {
+  GameScore,
+  GamesWon,
+  ScoringState,
+  ScoringSystem,
+  Side,
+} from "./types.js";
 
-export const POINTS_TO_WIN_GAME = 21;
-export const MAX_GAME_POINTS = 30;
 export const GAMES_TO_WIN_MATCH = 2;
 
-export function gameWinner(score: GameScore): Side | null {
+const scoringRules = {
+  "3x21": { pointsToWin: 21, maxGamePoints: 30 },
+  "3x15": { pointsToWin: 15, maxGamePoints: 21 },
+} as const;
+
+export function gameWinner(
+  score: GameScore,
+  scoringSystem: ScoringSystem,
+): Side | null {
   const leader: Side = score.home > score.away ? "home" : "away";
   const leaderPoints = score[leader];
   const trailingPoints = score[leader === "home" ? "away" : "home"];
+  const rules = scoringRules[scoringSystem];
 
-  if (leaderPoints === MAX_GAME_POINTS) return leader;
-  if (leaderPoints < POINTS_TO_WIN_GAME) return null;
+  if (leaderPoints === rules.maxGamePoints) return leader;
+  if (leaderPoints < rules.pointsToWin) return null;
   return leaderPoints - trailingPoints >= 2 ? leader : null;
 }
 
-export function matchWinner(games: readonly GameScore[]): Side | null {
-  const won = gamesWon(games);
+export function matchWinner(
+  games: readonly GameScore[],
+  scoringSystem: ScoringSystem,
+): Side | null {
+  const won = gamesWon(games, scoringSystem);
   if (won.home >= GAMES_TO_WIN_MATCH) return "home";
   if (won.away >= GAMES_TO_WIN_MATCH) return "away";
   return null;
 }
 
-export function gamesWon(games: readonly GameScore[]): GamesWon {
+export function gamesWon(
+  games: readonly GameScore[],
+  scoringSystem: ScoringSystem,
+): GamesWon {
   const won = { home: 0, away: 0 };
   for (const game of games) {
-    const winner = gameWinner(game);
+    const winner = gameWinner(game, scoringSystem);
     if (winner) won[winner] += 1;
   }
   return won;
@@ -32,19 +51,23 @@ export function gamesWon(games: readonly GameScore[]): GamesWon {
 
 export function previousCompletedGames(
   games: readonly GameScore[],
+  scoringSystem: ScoringSystem,
 ): GameScore[] {
-  return games.slice(0, -1).filter((game) => gameWinner(game) !== null);
+  return games
+    .slice(0, -1)
+    .filter((game) => gameWinner(game, scoringSystem) !== null);
 }
 
 export function recordPoint(
   games: readonly GameScore[],
   side: Side,
+  scoringSystem: ScoringSystem,
 ): GameScore[] {
-  const winner = matchWinner(games);
+  const winner = matchWinner(games, scoringSystem);
   if (winner) throw new Error("A completed match cannot receive more points.");
 
   const current = games.at(-1) ?? { home: 0, away: 0 };
-  if (gameWinner(current)) {
+  if (gameWinner(current, scoringSystem)) {
     return [
       ...games,
       { home: side === "home" ? 1 : 0, away: side === "away" ? 1 : 0 },
@@ -59,8 +82,8 @@ export function recordPoint(
 
   if (
     updatedCurrentGame &&
-    gameWinner(updatedCurrentGame) &&
-    !matchWinner(updatedGames)
+    gameWinner(updatedCurrentGame, scoringSystem) &&
+    !matchWinner(updatedGames, scoringSystem)
   ) {
     return [...updatedGames, { home: 0, away: 0 }];
   }
@@ -68,9 +91,13 @@ export function recordPoint(
   return updatedGames;
 }
 
-export function createScoringState(initialServer: Side): ScoringState {
+export function createScoringState(
+  initialServer: Side,
+  scoringSystem: ScoringSystem,
+): ScoringState {
   return {
     initialServer,
+    scoringSystem,
     servingSide: initialServer,
     games: [{ home: 0, away: 0 }],
     pointHistory: [],
@@ -83,8 +110,9 @@ export function recordRally(
 ): ScoringState {
   return {
     initialServer: state.initialServer,
+    scoringSystem: state.scoringSystem,
     servingSide: rallyWinner,
-    games: recordPoint(state.games, rallyWinner),
+    games: recordPoint(state.games, rallyWinner, state.scoringSystem),
     pointHistory: [...state.pointHistory, rallyWinner],
   };
 }
@@ -94,12 +122,20 @@ export function undoRally(state: ScoringState): ScoringState {
     throw new Error("There is no point to undo.");
   }
 
-  return replayRallies(state.initialServer, state.pointHistory.slice(0, -1));
+  return replayRallies(
+    state.initialServer,
+    state.scoringSystem,
+    state.pointHistory.slice(0, -1),
+  );
 }
 
 function replayRallies(
   initialServer: Side,
+  scoringSystem: ScoringSystem,
   pointHistory: readonly Side[],
 ): ScoringState {
-  return pointHistory.reduce(recordRally, createScoringState(initialServer));
+  return pointHistory.reduce(
+    recordRally,
+    createScoringState(initialServer, scoringSystem),
+  );
 }

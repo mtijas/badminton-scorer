@@ -7,6 +7,7 @@ const match: MatchState = {
   homePlayer: "Aino",
   awayPlayer: "Kai",
   initialServer: "home",
+  scoringSystem: "3x21",
   servingSide: "home",
   games: [{ home: 0, away: 0 }],
   pointHistory: [],
@@ -24,6 +25,7 @@ describe("match service", () => {
     const awayServerMatch: MatchState = {
       ...match,
       initialServer: "away",
+      scoringSystem: "3x15",
       servingSide: "away",
     };
     const fetchMock = vi.fn().mockResolvedValue(
@@ -35,7 +37,7 @@ describe("match service", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     // Act
-    const result = await createMatch("Aino", "Kai", "away");
+    const result = await createMatch("Aino", "Kai", "away", "3x15");
 
     // Assert
     expect(fetchMock).toHaveBeenCalledWith("http://localhost:3000/matches", {
@@ -45,6 +47,7 @@ describe("match service", () => {
         homePlayer: "Aino",
         awayPlayer: "Kai",
         initialServer: "away",
+        scoringSystem: "3x15",
       }),
     });
     expect(result).toEqual(awayServerMatch);

@@ -23,6 +23,7 @@ const startingMatch: MatchState = {
   homePlayer: "Aino",
   awayPlayer: "Kai",
   initialServer: "home",
+  scoringSystem: "3x21",
   servingSide: "home",
   games: [{ home: 0, away: 0 }],
   pointHistory: [],
@@ -55,7 +56,7 @@ describe("match scoring workflow", () => {
 
     // Assert
     await screen.findByRole("heading", { name: "Live match" });
-    expect(createMatch).toHaveBeenCalledWith("Aino", "Kai", "home");
+    expect(createMatch).toHaveBeenCalledWith("Aino", "Kai", "home", "3x21");
     expect(screen.getByRole("heading", { name: "Aino" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Kai" })).toBeTruthy();
     expect(screen.getByLabelText("Aino is serving")).toBeTruthy();
@@ -82,8 +83,36 @@ describe("match scoring workflow", () => {
       "Player one",
       "Player two",
       "away",
+      "3x21",
     );
     expect(screen.getByLabelText("Kai is serving")).toBeTruthy();
+  });
+
+  it("records the selected 3x15 scoring system", async () => {
+    // Arrange
+    vi.mocked(createMatch).mockResolvedValue({
+      ...startingMatch,
+      scoringSystem: "3x15",
+    });
+    render(<App />);
+
+    // Act
+    fireEvent.click(
+      screen.getByRole("radio", { name: "Best of three, 15 points" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Start match" }));
+
+    // Assert
+    await screen.findByRole("heading", { name: "Live match" });
+    expect(createMatch).toHaveBeenCalledWith(
+      "Player one",
+      "Player two",
+      "home",
+      "3x15",
+    );
+    expect(
+      screen.getByText("Game 1 · Best of 3 · 15-point games"),
+    ).toBeTruthy();
   });
 
   it("rejects empty or whitespace-only player names before creating a match", () => {
@@ -218,7 +247,7 @@ describe("match scoring workflow", () => {
     fireEvent.click(screen.getByRole("button", { name: "Add point for Aino" }));
 
     // Assert
-    await screen.findByText("Game 2 · Best of 3");
+    await screen.findByText("Game 2 · Best of 3 · 21-point games");
     expect(screen.getAllByText("Games won: 1")).toHaveLength(1);
     expect(screen.getAllByText("0", { selector: "strong" })).toHaveLength(2);
     expect(screen.getByText("Game 1: 21–15")).toBeTruthy();
@@ -241,6 +270,14 @@ describe("match scoring workflow", () => {
     render(<App />);
     fireEvent.click(screen.getByRole("button", { name: "Start match" }));
     await screen.findByRole("button", { name: "New match" });
+
+    expect(
+      (
+        screen.getByRole("button", {
+          name: "Abandon match",
+        }) as HTMLButtonElement
+      ).disabled,
+    ).toBe(true);
 
     // Act
     fireEvent.click(screen.getByRole("button", { name: "New match" }));

@@ -6,6 +6,7 @@ import {
   recordRally,
   undoRally,
   type MatchState,
+  type ScoringSystem,
   type Side,
 } from "@badminton-scorer/shared";
 
@@ -20,9 +21,15 @@ export async function buildApp(): Promise<FastifyInstance> {
   app.get("/health", async () => ({ status: "ok" }));
 
   app.post<{
-    Body: { homePlayer: string; awayPlayer: string; initialServer: Side };
+    Body: {
+      homePlayer: string;
+      awayPlayer: string;
+      initialServer: Side;
+      scoringSystem: ScoringSystem;
+    };
   }>("/matches", async (request, reply) => {
-    const { homePlayer, awayPlayer, initialServer } = request.body ?? {};
+    const { homePlayer, awayPlayer, initialServer, scoringSystem } =
+      request.body ?? {};
     if (!isPlayerName(homePlayer) || !isPlayerName(awayPlayer)) {
       return reply.code(400).send({ error: "Both player names are required." });
     }
@@ -31,8 +38,13 @@ export async function buildApp(): Promise<FastifyInstance> {
         .code(400)
         .send({ error: "initialServer must be home or away." });
     }
+    if (scoringSystem !== "3x21" && scoringSystem !== "3x15") {
+      return reply
+        .code(400)
+        .send({ error: "scoringSystem must be 3x21 or 3x15." });
+    }
 
-    const scoringState = createScoringState(initialServer);
+    const scoringState = createScoringState(initialServer, scoringSystem);
     const match: MatchState = {
       id: crypto.randomUUID(),
       homePlayer: homePlayer.trim(),
@@ -67,7 +79,10 @@ export async function buildApp(): Promise<FastifyInstance> {
         return reply.code(409).send({ error: "Match is already complete." });
 
       const scoringState = recordRally(match, request.body.side);
-      const winner = matchWinner(scoringState.games);
+      const winner = matchWinner(
+        scoringState.games,
+        scoringState.scoringSystem,
+      );
       const updated: MatchState = {
         ...match,
         ...scoringState,
@@ -87,7 +102,10 @@ export async function buildApp(): Promise<FastifyInstance> {
 
       try {
         const scoringState = undoRally(match);
-        const winner = matchWinner(scoringState.games);
+        const winner = matchWinner(
+          scoringState.games,
+          scoringState.scoringSystem,
+        );
         const updated: MatchState = {
           ...match,
           ...scoringState,

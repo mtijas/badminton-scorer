@@ -1,5 +1,5 @@
 import { type FormEvent, type ReactElement, useState } from "react";
-import type { Side } from "@badminton-scorer/shared";
+import type { ScoringSystem, Side } from "@badminton-scorer/shared";
 import { RequestError } from "../../components/RequestError.js";
 
 interface MatchSetupProps {
@@ -8,6 +8,7 @@ interface MatchSetupProps {
     homePlayer: string,
     awayPlayer: string,
     initialServer: Side,
+    scoringSystem: ScoringSystem,
   ) => Promise<void>;
 }
 
@@ -15,6 +16,7 @@ export function MatchSetup({ error, onStart }: MatchSetupProps): ReactElement {
   const [homePlayer, setHomePlayer] = useState("Player one");
   const [awayPlayer, setAwayPlayer] = useState("Player two");
   const [initialServer, setInitialServer] = useState<Side>("home");
+  const [scoringSystem, setScoringSystem] = useState<ScoringSystem>("3x21");
   const [validationError, setValidationError] = useState<string | null>(null);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>): void {
@@ -25,7 +27,7 @@ export function MatchSetup({ error, onStart }: MatchSetupProps): ReactElement {
     }
 
     setValidationError(null);
-    void onStart(homePlayer, awayPlayer, initialServer);
+    void onStart(homePlayer, awayPlayer, initialServer, scoringSystem);
   }
 
   return (
@@ -65,6 +67,27 @@ export function MatchSetup({ error, onStart }: MatchSetupProps): ReactElement {
               type="radio"
             />
             Away serves
+          </label>
+        </fieldset>
+        <fieldset>
+          <legend>Scoring system</legend>
+          <label>
+            <input
+              checked={scoringSystem === "3x21"}
+              name="scoring-system"
+              onChange={() => setScoringSystem("3x21")}
+              type="radio"
+            />
+            Best of three, 21 points
+          </label>
+          <label>
+            <input
+              checked={scoringSystem === "3x15"}
+              name="scoring-system"
+              onChange={() => setScoringSystem("3x15")}
+              type="radio"
+            />
+            Best of three, 15 points
           </label>
         </fieldset>
         <button type="submit">Start match</button>
