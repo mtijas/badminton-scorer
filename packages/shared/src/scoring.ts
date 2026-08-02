@@ -9,8 +9,8 @@ import type {
 export const GAMES_TO_WIN_MATCH = 2;
 
 const scoringRules = {
-  "3x21": { pointsToWin: 21, maxGamePoints: 30 },
-  "3x15": { pointsToWin: 15, maxGamePoints: 21 },
+  "3x21": { pointsToWin: 21, maxGamePoints: 30, endsChangePoint: 11 },
+  "3x15": { pointsToWin: 15, maxGamePoints: 21, endsChangePoint: 8 },
 } as const;
 
 export function gameWinner(
@@ -56,6 +56,32 @@ export function previousCompletedGames(
   return games
     .slice(0, -1)
     .filter((game) => gameWinner(game, scoringSystem) !== null);
+}
+
+export function isEndsChangeDue(
+  games: readonly GameScore[],
+  scoringSystem: ScoringSystem,
+): boolean {
+  const currentGame = games.at(-1);
+  if (!currentGame) return false;
+
+  const completedGames = previousCompletedGames(games, scoringSystem);
+  if (
+    currentGame.home === 0 &&
+    currentGame.away === 0 &&
+    (completedGames.length === 1 ||
+      (completedGames.length === 2 && !matchWinner(games, scoringSystem)))
+  ) {
+    return true;
+  }
+
+  const isDecidingGame = completedGames.length === 2;
+  const { endsChangePoint } = scoringRules[scoringSystem];
+  return (
+    isDecidingGame &&
+    (currentGame.home === endsChangePoint ||
+      currentGame.away === endsChangePoint)
+  );
 }
 
 export function recordPoint(

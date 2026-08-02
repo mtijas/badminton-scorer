@@ -3,6 +3,7 @@ import {
   createScoringState,
   gameWinner,
   gamesWon,
+  isEndsChangeDue,
   matchWinner,
   previousCompletedGames,
   recordPoint,
@@ -130,6 +131,83 @@ describe("badminton scoring", () => {
       { home: 21, away: 18 },
       { home: 15, away: 21 },
     ]);
+  });
+
+  it("requires an ends change after the first completed game", () => {
+    // Arrange
+    const games = [
+      { home: 21, away: 18 },
+      { home: 0, away: 0 },
+    ];
+
+    // Act
+    const endsChangeDue = isEndsChangeDue(games, scoringSystem);
+
+    // Assert
+    expect(endsChangeDue).toBe(true);
+  });
+
+  it("requires an ends change after the second game only when a third game starts", () => {
+    // Arrange
+    const thirdGameStarts = [
+      { home: 21, away: 18 },
+      { home: 18, away: 21 },
+      { home: 0, away: 0 },
+    ];
+    const matchIsComplete = [
+      { home: 21, away: 18 },
+      { home: 21, away: 18 },
+    ];
+
+    // Act
+    const endsChangeBeforeThirdGame = isEndsChangeDue(
+      thirdGameStarts,
+      scoringSystem,
+    );
+    const endsChangeAfterCompleteMatch = isEndsChangeDue(
+      matchIsComplete,
+      scoringSystem,
+    );
+
+    // Assert
+    expect(endsChangeBeforeThirdGame).toBe(true);
+    expect(endsChangeAfterCompleteMatch).toBe(false);
+  });
+
+  it.each([
+    ["3x21", 11],
+    ["3x15", 8],
+  ] as const)(
+    "requires an ends change in the deciding %s game after %i points",
+    (format, endsChangePoint) => {
+      // Arrange
+      const games = [
+        { home: format === "3x21" ? 21 : 15, away: 12 },
+        { home: 12, away: format === "3x21" ? 21 : 15 },
+        { home: endsChangePoint, away: 6 },
+      ];
+
+      // Act
+      const endsChangeDue = isEndsChangeDue(games, format);
+
+      // Assert
+      expect(endsChangeDue).toBe(true);
+    },
+  );
+
+  it("does not require an ends change before the deciding-game threshold", () => {
+    // Arrange
+    const games = [
+      { home: 21, away: 18 },
+      { home: 18, away: 21 },
+      { home: 10, away: 9 },
+    ];
+
+    // Act
+    const endsChangeDue = isEndsChangeDue(games, scoringSystem);
+
+    // Assert
+    expect(endsChangeDue).toBe(false);
   });
 
   it("rejects points after match completion", () => {
