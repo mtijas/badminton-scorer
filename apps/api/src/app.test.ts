@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it } from "vitest";
 import type { FastifyInstance } from "fastify";
 import type { MatchState, Side } from "@badminton-scorer/shared";
-import { buildApp } from "./app.js";
+import { buildApp as buildApplication, type BuildAppOptions } from "./app.js";
+import { InMemoryMatchRepository } from "./repositories/in-memory-match-repository.js";
 import type { MatchRepository } from "./repositories/match-repository.js";
 
 const whitespaceOnlyNameCases = [
@@ -33,6 +34,14 @@ const homeGameWinningRallies = [
   ...Array<Side>(15).fill("away"),
   "home" as const,
 ];
+
+function buildApp({
+  matchRepository,
+}: BuildAppOptions = {}): Promise<FastifyInstance> {
+  return buildApplication({
+    matchRepository: matchRepository ?? new InMemoryMatchRepository(),
+  });
+}
 
 describe("match API", () => {
   const apps: FastifyInstance[] = [];

@@ -38,7 +38,7 @@ pnpm check   # required completion gate: format, typecheck, lint, test, and buil
 pnpm format  # format project files with Prettier
 pnpm typecheck # type-check all workspaces without generating output
 pnpm build   # type-check and build deployable apps
-pnpm test    # run shared scoring-rule tests
+pnpm test    # run fast unit and application tests with in-memory storage (no PostgreSQL required)
 pnpm test:integration # migrate and run PostgreSQL repository integration tests (uses TEST_DATABASE_URL)
 pnpm test:e2e # run the Playwright browser scoring smoke test
 pnpm lint    # lint all JavaScript and TypeScript files
@@ -59,9 +59,12 @@ run `pnpm db:migrate` before `pnpm dev`, `pnpm test:e2e`, or `pnpm check`.
 
 ## PostgreSQL integration tests
 
-The repository integration suite uses a separate database on port 5433 so it
-does not truncate local development data. Start the isolated service and run
-the canonical command below; it applies migrations before executing the tests.
+Fast unit and application tests use `InMemoryMatchRepository` and run through
+`pnpm test` without a PostgreSQL connection. The PostgreSQL integration suite
+continues to verify migrations, transactions, constraints, event ordering, and
+repository queries against a separate database on port 5433, so it does not
+truncate local development data. Start the isolated service and run the
+canonical command below; it applies migrations before executing the tests.
 
 ```sh
 docker compose -f docker-compose.test.yml up -d
