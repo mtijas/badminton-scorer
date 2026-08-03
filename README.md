@@ -48,7 +48,11 @@ pnpm db:verify # verify PostgreSQL integrity constraints (requires DATABASE_URL)
 
 ## Git workflow
 
-Before every new task, update the local `main` branch:
+Before creating a branch or changing code, identify the GitHub Issue and assign
+it to yourself. If you cannot self-assign it because of a permission or
+identity problem, report the problem and do not begin implementation.
+
+Then update the local `main` branch:
 
 ```sh
 git switch main
@@ -60,6 +64,14 @@ Create a dedicated `feature/<issue-number>-<task>` branch from the updated
 to `main` after the required checks pass, and mark it ready for review. If the
 same task continues, push its additional commits to the same feature branch so
 that its existing pull request is updated instead of opening a new one.
+
+Before opening or substantially updating a pull request, inspect
+`.github/CODEOWNERS` and explicitly request review from every owner applicable
+to the changed files, even if GitHub automatically suggests or requests them.
+Repeat the owner check when the update adds files with a newly applicable owner.
+The pull request description must include `Closes #<issue-number>`, a concise
+implementation summary, validation performed (including `pnpm check`), and any
+remaining limitations or manual follow-up.
 
 ## Task tracking
 
@@ -80,8 +92,8 @@ acceptance criteria, design decisions, documentation impact, and limitations.
 Use `Closes #<issue-number>` only in the pull request description, not in a
 commit message.
 
-A human reviewer must approve every pull request into `main`; automated agents
-must not approve or merge it.
+A human reviewer must approve every pull request into `main`; authors and
+automated agents must not approve or merge their own pull requests.
 
 ## Review policy
 
