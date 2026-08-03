@@ -124,9 +124,10 @@ Update documentation when changing:
 
 ## Git
 
-Development work is integrated through `develop`. Create task branches from
-`develop` and open pull requests back to `develop`. Release changes reach
-`main` only through a pull request from `develop` to `main`.
+Development work is integrated through `develop`. When a task is complete,
+create a pull request from `develop` to `main`. If more work is done for the
+same task, push it to `develop` so that the existing pull request is updated;
+do not create a second pull request for that task.
 
 Pull requests into `main` require human approval; do not merge or approve them
 on behalf of a human reviewer.

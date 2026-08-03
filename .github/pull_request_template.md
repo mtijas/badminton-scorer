@@ -4,8 +4,9 @@ Describe the user-visible change and any relevant trade-offs.
 
 ## Target branch
 
-- [ ] This PR targets `develop`, or it promotes `develop` to `main`.
-- [ ] If this PR targets `main`, it originates from `develop` and awaits human approval.
+- [ ] This PR targets `main` and originates from `develop`.
+- [ ] This PR creates or updates the completed task's single PR.
+- [ ] This PR awaits human approval.
 
 ## Quality checklist
 
