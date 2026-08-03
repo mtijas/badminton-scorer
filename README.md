@@ -46,6 +46,16 @@ pnpm db:migrate # apply forward-only PostgreSQL migrations (requires DATABASE_UR
 pnpm db:verify # verify PostgreSQL integrity constraints (requires DATABASE_URL)
 ```
 
+## Git workflow
+
+`develop` is the integration branch for day-to-day development. Start each
+change from `develop` in a short-lived task branch, then open a pull request
+back to `develop` after the required checks pass.
+
+Promote approved development work by opening a pull request from `develop` to
+`main`. A human reviewer must approve every pull request into `main`; automated
+agents must not approve or merge it.
+
 Install the Chromium browser once before running the browser test locally:
 
 ```sh

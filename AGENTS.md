@@ -124,6 +124,13 @@ Update documentation when changing:
 
 ## Git
 
+Development work is integrated through `develop`. Create task branches from
+`develop` and open pull requests back to `develop`. Release changes reach
+`main` only through a pull request from `develop` to `main`.
+
+Pull requests into `main` require human approval; do not merge or approve them
+on behalf of a human reviewer.
+
 Use Conventional Commit prefixes:
 
 - feat:
