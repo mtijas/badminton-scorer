@@ -1,0 +1,34 @@
+# type: feat | fix | refactor | test | docs | chore
+<type>(<scope>): <imperative summary>
+
+Issue: #<github-issue-number>
+
+Why:
+- <problem being solved>
+- <user-visible or technical reason for the change>
+
+What:
+- <primary implementation change>
+- <important supporting change>
+- <tests or documentation added>
+
+Validation:
+- pnpm check
+
+Agent notes:
+- <handoff context or notable implementation detail>
+
+Acceptance criteria:
+- <criterion satisfied>
+- <criterion satisfied>
+
+Design decisions:
+- <important decision and rationale>
+
+Documentation impact:
+- <updated files, or "Not required">
+
+Known limitations:
+- <none, or describe remaining limitation>
+
+Refs: #<github-issue-number>

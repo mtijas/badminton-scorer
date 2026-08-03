@@ -67,6 +67,19 @@ Track work in GitHub Issues, not Linear. Create or identify the issue before
 starting implementation. Add `Closes #<issue-number>` to the PR description so
 that merging the PR closes its issue automatically.
 
+## Commit message template
+
+Enable the repository's Conventional Commit template for the current checkout:
+
+```sh
+git config commit.template .gitmessage
+```
+
+The template records the GitHub Issue, rationale, implementation, validation,
+acceptance criteria, design decisions, documentation impact, and limitations.
+Use `Closes #<issue-number>` only in the pull request description, not in a
+commit message.
+
 A human reviewer must approve every pull request into `main`; automated agents
 must not approve or merge it.
 
