@@ -1,5 +1,6 @@
 import { type ReactElement, useEffect, useRef, useState } from "react";
 import {
+  gameWinner,
   gamesWon,
   previousCompletedGames,
   type MatchState,
@@ -69,6 +70,7 @@ function LiveMatch({
     match.games,
     match.scoringSystem,
   );
+  const completedGame = latestCompletedGame(match);
   return (
     <div className="match-screen">
       <main className="scoreboard">
@@ -80,6 +82,22 @@ function LiveMatch({
           <h1>
             {match.status === "complete" ? `${winnerName} wins` : "Live match"}
           </h1>
+          {completedGame && (
+            <aside
+              aria-label="Game winner announcement"
+              className="game-winner-announcement"
+              role="status"
+            >
+              <h2>
+                {match[`${completedGame.winner}Player`]} wins Game{" "}
+                {completedGame.number}
+              </h2>
+              <p>
+                Final score: {completedGame.score.home}–
+                {completedGame.score.away}
+              </p>
+            </aside>
+          )}
           {match.endsChangeDue && (
             <aside className="ends-change-prompt" role="status">
               Change ends now.
@@ -173,6 +191,24 @@ function LiveMatch({
       <ScoreHistory match={match} />
     </div>
   );
+}
+
+interface CompletedGame {
+  readonly number: number;
+  readonly score: MatchState["games"][number];
+  readonly winner: Side;
+}
+
+function latestCompletedGame(match: MatchState): CompletedGame | null {
+  for (let index = match.games.length - 1; index >= 0; index -= 1) {
+    const score = match.games[index];
+    if (!score) continue;
+
+    const winner = gameWinner(score, match.scoringSystem);
+    if (winner) return { number: index + 1, score, winner };
+  }
+
+  return null;
 }
 
 function ScoreHistory({ match }: { readonly match: MatchState }): ReactElement {
