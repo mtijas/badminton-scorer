@@ -79,6 +79,16 @@ Track work in GitHub Issues, not Linear. Create or identify the issue before
 starting implementation. Add `Closes #<issue-number>` to the PR description so
 that merging the PR closes its issue automatically.
 
+Read the issue's acceptance criteria before implementation. If a criterion is
+ambiguous, impossible to verify, or conflicts with another requirement, report
+the problem rather than making assumptions. Before considering the issue
+complete or opening or updating its pull request, review every criterion
+individually: check each satisfied acceptance-criteria checkbox in the issue,
+leave unmet criteria unchecked, and continue implementation while any remain
+unmet. `pnpm check` is required validation, but it does not replace this
+acceptance-criteria verification. Include a checklist in the pull request
+describing how every acceptance criterion was satisfied.
+
 ## Commit message template
 
 Enable the repository's Conventional Commit template for the current checkout:
