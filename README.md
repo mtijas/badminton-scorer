@@ -46,6 +46,17 @@ pnpm db:migrate # apply forward-only PostgreSQL migrations (requires DATABASE_UR
 pnpm db:verify # verify PostgreSQL integrity constraints (requires DATABASE_URL)
 ```
 
+## Git workflow
+
+For each task, create a dedicated `feature/<task>` branch from `main`. When
+the task is complete, open a pull request from that feature branch to `main`
+after the required checks pass, and mark it ready for review. If the same task
+continues, push its additional commits to the same feature branch so that its
+existing pull request is updated instead of opening a new one.
+
+A human reviewer must approve every pull request into `main`; automated agents
+must not approve or merge it.
+
 Install the Chromium browser once before running the browser test locally:
 
 ```sh
