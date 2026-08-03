@@ -1,0 +1,5 @@
+# Default ownership for all repository content.
+* @mtijas
+
+# Keep repository automation and contributor policy explicitly owned.
+/.github/ @mtijas
