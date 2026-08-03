@@ -11,6 +11,14 @@ Describe any remaining limitations or required manual follow-up, or write
 
 Closes #
 
+## Acceptance criteria
+
+For each acceptance criterion in the linked issue, add a checked item that
+explains how this pull request satisfies it. Leave unmet criteria unchecked and
+continue implementation before requesting review.
+
+- [ ] Criterion: Evidence:
+
 ## Target branch
 
 - [ ] This PR targets `main` and originates from a `feature/<issue-number>-<task>` branch.

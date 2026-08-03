@@ -19,10 +19,13 @@ Correct scoring behaviour is more important than UI convenience.
 
 Before changing code:
 
-1. Read `docs/architecture.md`.
-2. Read `docs/scoring-rules.md` for scoring-related changes.
-3. Inspect existing tests for the affected feature.
-4. Do not change unrelated files.
+1. Read the GitHub Issue's acceptance criteria. If a criterion is ambiguous,
+   impossible to verify, or conflicts with another requirement, report the
+   problem and do not make assumptions.
+2. Read `docs/architecture.md`.
+3. Read `docs/scoring-rules.md` for scoring-related changes.
+4. Inspect existing tests for the affected feature.
+5. Do not change unrelated files.
 
 After changing code, run:
 
@@ -31,6 +34,11 @@ pnpm check
 ```
 
 `pnpm check` is the required completion gate. It validates formatting, type checking, linting, tests, and builds; it must pass before the task is considered complete.
+It does not replace acceptance-criteria verification. Before considering an
+issue complete or opening or updating its pull request, review every acceptance
+criterion individually. Check every satisfied acceptance-criteria checkbox in
+the issue, leave unmet criteria unchecked, and continue implementation while
+any criterion remains unmet.
 
 ## Commands
 
@@ -149,7 +157,8 @@ automatically requests them. Repeat this check when the update changes files
 with a newly applicable owner. The pull request description must include
 `Closes #<issue-number>`, a concise implementation summary, the validation
 performed (including `pnpm check`), and any remaining limitations or manual
-follow-up.
+follow-up. Also include a checklist that explains how every issue acceptance
+criterion was satisfied.
 
 ## Task tracking
 
