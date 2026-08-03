@@ -48,9 +48,16 @@ pnpm db:verify # verify PostgreSQL integrity constraints (requires DATABASE_URL)
 
 ## Git workflow
 
-For each task, create a dedicated `feature/<task>` branch from `main`. When
-the task is complete, open a pull request from that feature branch to `main`
-after the required checks pass, and mark it ready for review. If the same task
+Before every new task, update the local `main` branch:
+
+```sh
+git switch main
+git pull --ff-only origin main
+```
+
+Create a dedicated `feature/<task>` branch from the updated `main`. When the
+task is complete, open a pull request from that feature branch to `main` after
+the required checks pass, and mark it ready for review. If the same task
 continues, push its additional commits to the same feature branch so that its
 existing pull request is updated instead of opening a new one.
 
