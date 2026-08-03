@@ -83,6 +83,15 @@ commit message.
 A human reviewer must approve every pull request into `main`; automated agents
 must not approve or merge it.
 
+## Review policy
+
+`@mtijas` is the code owner for the repository, including `.github`. Pull
+requests to `main` must be approved by this code owner before they are merged.
+The `main` branch protection or ruleset must require a pull request, at least
+one approval, Code Owner approval, dismissal of stale approvals, and approval
+of the most recent push. Bypass of these requirements must be disabled where
+GitHub supports it. A pull request author cannot provide the required approval.
+
 Install the Chromium browser once before running the browser test locally:
 
 ```sh
