@@ -136,6 +136,25 @@ input:focus-visible {
   border-radius: 0.4rem;
   font-weight: 700;
 }
+.game-winner-announcement {
+  margin: 1rem 0;
+  padding: 1rem;
+  color: #064e3b;
+  background: #d1fae5;
+  border: 2px solid #059669;
+  border-radius: 0.4rem;
+}
+.game-winner-announcement h2,
+.game-winner-announcement p {
+  margin: 0;
+}
+.game-winner-announcement h2 {
+  font-size: 1.5rem;
+}
+.game-winner-announcement p {
+  margin-top: 0.25rem;
+  font-weight: 700;
+}
 section {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

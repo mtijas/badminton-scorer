@@ -318,7 +318,73 @@ describe("match scoring workflow", () => {
     expect(screen.getAllByText("0", { selector: "strong" })).toHaveLength(2);
     expect(screen.getByText("Game 1: 21–15")).toBeTruthy();
     expect(screen.getByLabelText("Aino is serving")).toBeTruthy();
-    expect(screen.getByRole("status").textContent).toBe("Change ends now.");
+    expect(screen.getByText("Change ends now.").textContent).toBe(
+      "Change ends now.",
+    );
+    expect(
+      screen.getByRole("status", { name: "Game winner announcement" })
+        .textContent,
+    ).toBe("Aino wins Game 1Final score: 21–15");
+  });
+
+  it.each([
+    { home: 22, away: 20 },
+    { home: 30, away: 29 },
+  ])(
+    "announces the winner for a completed extended game at $home–$away",
+    async ({ home, away }) => {
+      // Arrange
+      vi.mocked(createMatch).mockResolvedValue({
+        ...startingMatch,
+        games: [
+          { home, away },
+          { home: 0, away: 0 },
+        ],
+      });
+      render(<App />);
+
+      // Act
+      fireEvent.click(screen.getByRole("button", { name: "Start match" }));
+
+      // Assert
+      const announcement = await screen.findByRole("status", {
+        name: "Game winner announcement",
+      });
+      expect(announcement.textContent).toBe(
+        `Aino wins Game 1Final score: ${home}–${away}`,
+      );
+    },
+  );
+
+  it("removes the winner announcement when undo restores the game point", async () => {
+    // Arrange
+    const completedGame: MatchState = {
+      ...startingMatch,
+      games: [
+        { home: 21, away: 19 },
+        { home: 0, away: 0 },
+      ],
+      pointHistory: Array<"home" | "away">(40).fill("home"),
+    };
+    const restoredGamePoint: MatchState = {
+      ...startingMatch,
+      games: [{ home: 20, away: 19 }],
+      pointHistory: Array<"home" | "away">(39).fill("home"),
+    };
+    vi.mocked(createMatch).mockResolvedValue(completedGame);
+    vi.mocked(undoPoint).mockResolvedValue(restoredGamePoint);
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: "Start match" }));
+    await screen.findByRole("status", { name: "Game winner announcement" });
+
+    // Act
+    fireEvent.click(screen.getByRole("button", { name: "Undo last point" }));
+
+    // Assert
+    await waitFor(() => expect(undoPoint).toHaveBeenCalledWith("match-1"));
+    expect(
+      screen.queryByRole("status", { name: "Game winner announcement" }),
+    ).toBeNull();
   });
 
   it("returns to match setup when starting a new match after completion", async () => {
@@ -342,6 +408,20 @@ describe("match scoring workflow", () => {
       (
         screen.getByRole("button", {
           name: "Abandon match",
+        }) as HTMLButtonElement
+      ).disabled,
+    ).toBe(true);
+    expect(
+      (
+        screen.getByRole("button", {
+          name: "Add point for Aino",
+        }) as HTMLButtonElement
+      ).disabled,
+    ).toBe(true);
+    expect(
+      (
+        screen.getByRole("button", {
+          name: "Add point for Kai",
         }) as HTMLButtonElement
       ).disabled,
     ).toBe(true);
