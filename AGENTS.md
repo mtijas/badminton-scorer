@@ -131,11 +131,18 @@ git switch main
 git pull --ff-only origin main
 ```
 
-Create a dedicated `feature/<task>` branch from that updated `main`. When the
-task is complete, open a pull request from that feature branch to `main` and
-mark it ready for review. If more work is done for the same task, push it to
-the same feature branch so that its existing pull request is updated; do not
-create a second pull request for that task.
+Create a dedicated `feature/<issue-number>-<task>` branch from that updated
+`main`. When the task is complete, open a pull request from that feature branch
+to `main` and mark it ready for review. If more work is done for the same task,
+push it to the same feature branch so that its existing pull request is
+updated; do not create a second pull request for that task.
+
+## Task tracking
+
+Use GitHub Issues for task tracking; do not use Linear. Create or identify the
+GitHub Issue before starting implementation. Include `Closes #<issue-number>`
+in the pull request description so that GitHub closes the issue when the PR is
+merged.
 
 Pull requests into `main` require human approval; do not merge or approve them
 on behalf of a human reviewer.

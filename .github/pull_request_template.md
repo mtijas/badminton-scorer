@@ -2,9 +2,13 @@
 
 Describe the user-visible change and any relevant trade-offs.
 
+## Linked issue
+
+Closes #
+
 ## Target branch
 
-- [ ] This PR targets `main` and originates from a `feature/<task>` branch.
+- [ ] This PR targets `main` and originates from a `feature/<issue-number>-<task>` branch.
 - [ ] This feature branch started from an up-to-date `main`.
 - [ ] This PR creates or updates the completed task's single PR.
 - [ ] This PR is ready for human review and approval.
