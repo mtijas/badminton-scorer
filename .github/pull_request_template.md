@@ -2,6 +2,11 @@
 
 Describe the user-visible change and any relevant trade-offs.
 
+## Limitations or follow-up
+
+Describe any remaining limitations or required manual follow-up, or write
+`None`.
+
 ## Linked issue
 
 Closes #
@@ -17,3 +22,4 @@ Closes #
 
 - [ ] I ran `pnpm check` locally.
 - [ ] I updated documentation, API contracts, or migrations where applicable.
+- [ ] I inspected `.github/CODEOWNERS` and explicitly requested review from every applicable Code Owner.

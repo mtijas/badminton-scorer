@@ -124,7 +124,12 @@ Update documentation when changing:
 
 ## Git
 
-Before starting each new task, update the local `main` branch from Git:
+Before creating a branch or changing code, identify the GitHub Issue and assign
+it to your own GitHub account. If you cannot self-assign it because of a
+permission or identity problem, report that problem and do not begin
+implementation.
+
+Then update the local `main` branch from Git:
 
 ```sh
 git switch main
@@ -137,6 +142,15 @@ to `main` and mark it ready for review. If more work is done for the same task,
 push it to the same feature branch so that its existing pull request is
 updated; do not create a second pull request for that task.
 
+Before opening or substantially updating a pull request, inspect
+`.github/CODEOWNERS` and identify every owner for the changed files. Explicitly
+request review from all applicable Code Owners, even when GitHub suggests or
+automatically requests them. Repeat this check when the update changes files
+with a newly applicable owner. The pull request description must include
+`Closes #<issue-number>`, a concise implementation summary, the validation
+performed (including `pnpm check`), and any remaining limitations or manual
+follow-up.
+
 ## Task tracking
 
 Use GitHub Issues for task tracking; do not use Linear. Create or identify the
@@ -144,8 +158,8 @@ GitHub Issue before starting implementation. Include `Closes #<issue-number>`
 in the pull request description so that GitHub closes the issue when the PR is
 merged.
 
-Pull requests into `main` require human approval; do not merge or approve them
-on behalf of a human reviewer.
+Pull requests into `main` require human approval. Do not approve or merge your
+own pull request, or do so on behalf of a human reviewer.
 
 Use Conventional Commit prefixes:
 
