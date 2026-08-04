@@ -99,6 +99,40 @@ describe("3x15 badminton scoring", () => {
     expect(endsChangeDue).toBe(true);
   });
 
+  it.each([
+    { firstSide: "home" as const, secondSide: "away" as const },
+    { firstSide: "away" as const, secondSide: "home" as const },
+  ])(
+    "requires an ends change only when $firstSide first reaches 8 in the deciding game",
+    ({ firstSide, secondSide }) => {
+      // Arrange
+      const decidingGameState = {
+        ...createScoringState("home", scoringSystem),
+        games: [
+          { home: 15, away: 12 },
+          { home: 12, away: 15 },
+          {
+            home: firstSide === "home" ? 7 : 6,
+            away: firstSide === "away" ? 7 : 6,
+          },
+        ],
+      };
+
+      // Act
+      const thresholdState = recordRally(decidingGameState, firstSide);
+      const opponentPointState = recordRally(thresholdState, secondSide);
+      const anotherOpponentPointState = recordRally(
+        opponentPointState,
+        secondSide,
+      );
+
+      // Assert
+      expect(thresholdState.endsChangeDue).toBe(true);
+      expect(opponentPointState.endsChangeDue).toBe(false);
+      expect(anotherOpponentPointState.endsChangeDue).toBe(false);
+    },
+  );
+
   it("does not require another ends change when the second side reaches 8", () => {
     // Arrange
     const games = [
@@ -163,5 +197,6 @@ describe("3x15 badminton scoring", () => {
       { home: 0, away: 15 },
       { home: 7, away: 0 },
     ]);
+    expect(recordRally(revertedState, "home").endsChangeDue).toBe(true);
   });
 });

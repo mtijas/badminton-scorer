@@ -138,12 +138,15 @@ export function recordRally(
   rallyWinner: Side,
 ): ScoringState {
   const games = recordPoint(state.games, rallyWinner, state.scoringSystem);
+  const endsChangeDue =
+    isEndsChangeDue(games, state.scoringSystem) &&
+    !isEndsChangeDue(state.games, state.scoringSystem);
 
   return {
     initialServer: state.initialServer,
     scoringSystem: state.scoringSystem,
     servingSide: rallyWinner,
-    endsChangeDue: isEndsChangeDue(games, state.scoringSystem),
+    endsChangeDue,
     games,
     pointHistory: [...state.pointHistory, rallyWinner],
   };
