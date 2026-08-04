@@ -98,6 +98,10 @@ input:focus-visible {
   width: auto;
   margin: 0;
 }
+.scoring-panels {
+  display: grid;
+  gap: 1rem;
+}
 .score-history {
   max-height: 32rem;
   padding: 1rem;
@@ -198,10 +202,17 @@ article button {
   margin-top: 0;
 }
 .game-history {
-  margin-top: 2rem;
+  padding: 1rem;
   text-align: left;
+  border: 1px solid #d9e2ec;
+  border-radius: 0.75rem;
+  background: #f8fbfd;
+}
+.game-history h2 {
+  margin-top: 0;
 }
 .game-history ol {
+  margin-top: 0;
   margin-bottom: 0;
   padding-left: 1.5rem;
 }

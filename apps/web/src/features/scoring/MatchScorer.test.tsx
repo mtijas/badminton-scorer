@@ -219,7 +219,7 @@ describe("match scoring workflow", () => {
     );
   });
 
-  it("shows scores from completed games before the current game", async () => {
+  it("shows previous games in a panel below scoring history", async () => {
     // Arrange
     const matchWithPreviousGame: MatchState = {
       ...startingMatch,
@@ -235,8 +235,17 @@ describe("match scoring workflow", () => {
     fireEvent.click(screen.getByRole("button", { name: "Start match" }));
 
     // Assert
-    await screen.findByRole("heading", { name: "Previous games" });
+    const scoringHistory = await screen.findByRole("complementary", {
+      name: "Scoring history",
+    });
+    const previousGames = screen.getByRole("complementary", {
+      name: "Previous games",
+    });
     expect(screen.getByText("Game 1: 21–18")).toBeTruthy();
+    expect(
+      scoringHistory.compareDocumentPosition(previousGames) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 
   it("shows score events in order and identifies an undo as a correction", async () => {

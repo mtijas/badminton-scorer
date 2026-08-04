@@ -174,8 +174,12 @@ function LiveMatch({
             </div>
           </div>
         )}
+        {error && <RequestError message={error} />}
+      </main>
+      <div className="scoring-panels">
+        <ScoreHistory match={match} />
         {previousGames.length > 0 && (
-          <div className="game-history">
+          <aside aria-label="Previous games" className="game-history">
             <h2>Previous games</h2>
             <ol>
               {previousGames.map((game, index) => (
@@ -184,11 +188,9 @@ function LiveMatch({
                 </li>
               ))}
             </ol>
-          </div>
+          </aside>
         )}
-        {error && <RequestError message={error} />}
-      </main>
-      <ScoreHistory match={match} />
+      </div>
     </div>
   );
 }
