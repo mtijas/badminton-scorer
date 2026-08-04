@@ -70,7 +70,7 @@ function LiveMatch({
     match.games,
     match.scoringSystem,
   );
-  const completedGame = latestCompletedGame(match);
+  const completedGame = gameWinnerAnnouncement(match);
   return (
     <div className="match-screen">
       <main className="scoreboard">
@@ -199,7 +199,25 @@ interface CompletedGame {
   readonly winner: Side;
 }
 
-function latestCompletedGame(match: MatchState): CompletedGame | null {
+function gameWinnerAnnouncement(match: MatchState): CompletedGame | null {
+  const currentGameNumber = match.games.length;
+  const currentGame = match.games.at(-1);
+  if (!currentGame) return null;
+
+  const currentGameWinner = gameWinner(currentGame, match.scoringSystem);
+  if (currentGameWinner) {
+    return {
+      number: currentGameNumber,
+      score: currentGame,
+      winner: currentGameWinner,
+    };
+  }
+
+  const currentGameHasStarted = match.scoreHistory.some(
+    (entry) => entry.gameNumber === currentGameNumber,
+  );
+  if (currentGameHasStarted) return null;
+
   for (let index = match.games.length - 1; index >= 0; index -= 1) {
     const score = match.games[index];
     if (!score) continue;

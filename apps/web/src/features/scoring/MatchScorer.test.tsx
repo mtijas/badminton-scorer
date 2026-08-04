@@ -328,6 +328,118 @@ describe("match scoring workflow", () => {
   });
 
   it.each([
+    { side: "home" as const, player: "Aino", score: { home: 1, away: 0 } },
+    { side: "away" as const, player: "Kai", score: { home: 0, away: 1 } },
+  ])(
+    "hides the previous winner announcement when $player scores first in the new game",
+    async ({ side, player, score }) => {
+      // Arrange
+      const completedGame: MatchState = {
+        ...startingMatch,
+        games: [
+          { home: 21, away: 15 },
+          { home: 0, away: 0 },
+        ],
+        pointHistory: Array<"home" | "away">(36).fill("home"),
+      };
+      const inProgressGame: MatchState = {
+        ...completedGame,
+        games: [{ home: 21, away: 15 }, score],
+        pointHistory: [...completedGame.pointHistory, side],
+        scoreHistory: [
+          {
+            eventNumber: 37,
+            type: "rally_awarded",
+            awardedSide: side,
+            occurredAt: "2026-08-04T17:00:00.000Z",
+            gameNumber: 2,
+            score,
+          },
+        ],
+      };
+      vi.mocked(createMatch).mockResolvedValue(completedGame);
+      vi.mocked(recordPoint).mockResolvedValue(inProgressGame);
+      render(<App />);
+      fireEvent.click(screen.getByRole("button", { name: "Start match" }));
+      await screen.findByRole("status", { name: "Game winner announcement" });
+
+      // Act
+      fireEvent.click(
+        screen.getByRole("button", { name: `Add point for ${player}` }),
+      );
+
+      // Assert
+      await waitFor(() =>
+        expect(recordPoint).toHaveBeenCalledWith("match-1", side),
+      );
+      expect(
+        screen.queryByRole("status", { name: "Game winner announcement" }),
+      ).toBeNull();
+    },
+  );
+
+  it("keeps the previous winner announcement hidden when the first point is undone", async () => {
+    // Arrange
+    const completedGame: MatchState = {
+      ...startingMatch,
+      games: [
+        { home: 21, away: 15 },
+        { home: 0, away: 0 },
+      ],
+      pointHistory: Array<"home" | "away">(36).fill("home"),
+    };
+    const inProgressGame: MatchState = {
+      ...completedGame,
+      games: [
+        { home: 21, away: 15 },
+        { home: 1, away: 0 },
+      ],
+      pointHistory: [...completedGame.pointHistory, "home"],
+      scoreHistory: [
+        {
+          eventNumber: 37,
+          type: "rally_awarded",
+          awardedSide: "home",
+          occurredAt: "2026-08-04T17:00:00.000Z",
+          gameNumber: 2,
+          score: { home: 1, away: 0 },
+        },
+      ],
+    };
+    const correctedGame: MatchState = {
+      ...completedGame,
+      scoreHistory: [
+        ...inProgressGame.scoreHistory,
+        {
+          eventNumber: 38,
+          type: "rally_reversed",
+          awardedSide: null,
+          occurredAt: "2026-08-04T17:01:00.000Z",
+          gameNumber: 2,
+          score: { home: 0, away: 0 },
+        },
+      ],
+    };
+    vi.mocked(createMatch).mockResolvedValue(inProgressGame);
+    vi.mocked(undoPoint).mockResolvedValue(correctedGame);
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: "Start match" }));
+    await screen.findByRole("button", { name: "Undo last point" });
+    expect(
+      screen.queryByRole("status", { name: "Game winner announcement" }),
+    ).toBeNull();
+
+    // Act
+    fireEvent.click(screen.getByRole("button", { name: "Undo last point" }));
+
+    // Assert
+    await waitFor(() => expect(undoPoint).toHaveBeenCalledWith("match-1"));
+    expect(
+      screen.queryByRole("status", { name: "Game winner announcement" }),
+    ).toBeNull();
+  });
+
+  it.each([
     { home: 22, away: 20 },
     { home: 30, away: 29 },
   ])(
