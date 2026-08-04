@@ -21,9 +21,27 @@ npm install --global pnpm@11.9.0
 
 Docker uses the same direct installation because the Corepack version bundled with the Node image can have outdated npm signing-key metadata.
 
+Start the local PostgreSQL database and install dependencies:
+
 ```sh
 docker compose up -d database
 pnpm install
+```
+
+Create the local environment file and load it into the current shell before
+running migrations or starting the API. The provided `DATABASE_URL` matches the
+database service started above.
+
+```sh
+cp .env.example .env
+set -a
+. ./.env
+set +a
+```
+
+Then apply migrations and start the application:
+
+```sh
 pnpm db:migrate
 pnpm dev
 ```
@@ -120,7 +138,10 @@ Install the Chromium browser once before running the browser test locally:
 pnpm exec playwright install chromium
 ```
 
-Copy `.env.example` to `.env` only when overriding the local defaults.
+The `.env.example` file includes the local development defaults, including the
+required `DATABASE_URL`. Update `.env` if you need different ports, origins, or
+a PostgreSQL instance, then reload it in the current shell before running
+`pnpm db:migrate` or `pnpm dev`.
 
 The API requires PostgreSQL. Start it with `docker compose up -d database`, then
 run `pnpm db:migrate` before `pnpm dev`. `pnpm test:e2e` applies pending migrations
