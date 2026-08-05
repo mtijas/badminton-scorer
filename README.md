@@ -57,12 +57,34 @@ pnpm format  # format project files with Prettier
 pnpm typecheck # type-check all workspaces without generating output
 pnpm build   # type-check and build deployable apps
 pnpm test    # run fast unit and application tests with in-memory storage (no PostgreSQL required)
+pnpm test:coverage # run unit and application tests with V8 coverage reports
 pnpm test:integration # migrate and run PostgreSQL repository integration tests (uses TEST_DATABASE_URL)
 pnpm test:e2e # run the Playwright browser scoring smoke test
 pnpm lint    # lint all JavaScript and TypeScript files
 pnpm db:migrate # apply forward-only PostgreSQL migrations (requires DATABASE_URL)
 pnpm db:verify # verify PostgreSQL integrity constraints (requires DATABASE_URL)
 ```
+
+## Coverage
+
+Run the local coverage suite with:
+
+```sh
+pnpm test:coverage
+```
+
+Vitest uses its V8 coverage provider and writes a terminal summary, an HTML
+report at `coverage/index.html`, and an LCOV report at `coverage/lcov.info`.
+The `coverage/` directory is generated and ignored by Git. Open
+`coverage/index.html` in a browser after the command completes (on macOS, run
+`open coverage/index.html`).
+
+Pull-request CI uploads `coverage/lcov.info` through `codecov/codecov-action`.
+Before enabling or relying on this upload, connect the repository to Codecov
+and add its upload token as the GitHub Actions repository secret
+`CODECOV_TOKEN`; never commit the token. Public repositories may allow
+tokenless uploads only when the Codecov organization has explicitly disabled
+token authentication for public repositories.
 
 ## Git workflow
 
