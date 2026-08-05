@@ -84,7 +84,7 @@ Dependencies should flow in this direction:
 
 The scoring domain must not depend on UI or persistence.
 
-Before making architectural changes, read every ADR under `/docs/adr`.
+Before making architectural changes, read every ADR under `/docs/decisions`.
 
 The ADRs are authoritative.
 
