@@ -241,11 +241,59 @@ describe("match scoring workflow", () => {
     const previousGames = screen.getByRole("complementary", {
       name: "Previous games",
     });
-    expect(screen.getByText("Game 1: 21–18")).toBeTruthy();
+    expect(screen.getByText("Game 1: 21–18 — Winner: Aino")).toBeTruthy();
     expect(
       scoringHistory.compareDocumentPosition(previousGames) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it.each([
+    { score: { home: 22, away: 20 }, winner: "Aino" },
+    { score: { home: 29, away: 30 }, winner: "Kai" },
+  ])(
+    "shows $winner as the winner of a completed $score.home–$score.away game",
+    async ({ score, winner }) => {
+      // Arrange
+      vi.mocked(createMatch).mockResolvedValue({
+        ...startingMatch,
+        games: [score, { home: 0, away: 0 }],
+      });
+      render(<App />);
+
+      // Act
+      fireEvent.click(screen.getByRole("button", { name: "Start match" }));
+
+      // Assert
+      await screen.findByRole("complementary", { name: "Previous games" });
+      expect(
+        screen.getByText(
+          `Game 1: ${score.home}–${score.away} — Winner: ${winner}`,
+        ),
+      ).toBeTruthy();
+    },
+  );
+
+  it("does not show a winner for an incomplete game", async () => {
+    // Arrange
+    vi.mocked(createMatch).mockResolvedValue({
+      ...startingMatch,
+      games: [
+        { home: 21, away: 20 },
+        { home: 4, away: 3 },
+      ],
+    });
+    render(<App />);
+
+    // Act
+    fireEvent.click(screen.getByRole("button", { name: "Start match" }));
+    await screen.findByRole("heading", { name: "Live match" });
+
+    // Assert
+    expect(
+      screen.queryByRole("complementary", { name: "Previous games" }),
+    ).toBeNull();
+    expect(screen.queryByText(/Winner:/)).toBeNull();
   });
 
   it("shows score events in order and identifies an undo as a correction", async () => {
@@ -325,7 +373,7 @@ describe("match scoring workflow", () => {
     await screen.findByText("Game 2 · Best of 3 · 21-point games");
     expect(screen.getAllByText("Games won: 1")).toHaveLength(1);
     expect(screen.getAllByText("0", { selector: "strong" })).toHaveLength(2);
-    expect(screen.getByText("Game 1: 21–15")).toBeTruthy();
+    expect(screen.getByText("Game 1: 21–15 — Winner: Aino")).toBeTruthy();
     expect(screen.getByLabelText("Aino is serving")).toBeTruthy();
     expect(screen.getByText("Change ends now.").textContent).toBe(
       "Change ends now.",

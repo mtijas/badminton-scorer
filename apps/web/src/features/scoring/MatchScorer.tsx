@@ -183,15 +183,53 @@ function LiveMatch({
             <h2>Previous games</h2>
             <ol>
               {previousGames.map((game, index) => (
-                <li key={index}>
-                  Game {index + 1}: {game.home}–{game.away}
-                </li>
+                <PreviousGame
+                  key={index}
+                  game={game}
+                  gameNumber={index + 1}
+                  homePlayer={match.homePlayer}
+                  awayPlayer={match.awayPlayer}
+                  scoringSystem={match.scoringSystem}
+                />
               ))}
             </ol>
           </aside>
         )}
       </div>
     </div>
+  );
+}
+
+interface PreviousGameProps {
+  readonly game: MatchState["games"][number];
+  readonly gameNumber: number;
+  readonly homePlayer: string;
+  readonly awayPlayer: string;
+  readonly scoringSystem: MatchState["scoringSystem"];
+}
+
+function PreviousGame({
+  game,
+  gameNumber,
+  homePlayer,
+  awayPlayer,
+  scoringSystem,
+}: PreviousGameProps): ReactElement {
+  const winner = gameWinner(game, scoringSystem);
+  if (!winner) {
+    return (
+      <li>
+        Game {gameNumber}: {game.home}–{game.away}
+      </li>
+    );
+  }
+
+  const winnerName = winner === "home" ? homePlayer : awayPlayer;
+
+  return (
+    <li>
+      Game {gameNumber}: {game.home}–{game.away} — Winner: {winnerName}
+    </li>
   );
 }
 
