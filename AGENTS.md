@@ -160,6 +160,50 @@ performed (including `pnpm check`), and any remaining limitations or manual
 follow-up. Also include a checklist that explains how every issue acceptance
 criterion was satisfied.
 
+### GitHub Projects review status
+
+An issue is ready for review only when its implementation is complete, every
+acceptance criterion has been individually reviewed and checked in the issue,
+no criterion remains unmet, ambiguous, or unverifiable, `pnpm check` has
+passed, and a pull request containing `Closes #<issue-number>` exists and is
+marked ready for review (not draft).
+
+Only after every condition above is true, move the linked issue to `In review`
+in its GitHub Project. Draft pull requests, incomplete acceptance criteria, and
+failed or incomplete validation must not trigger this update.
+
+Use the GitHub CLI with a token that has the `project` scope. Confirm the scope
+with `gh auth status`; if it is missing, run
+`gh auth refresh --hostname github.com -s project`. If authentication, project
+access, or the refresh fails, stop and report the failure. Do not claim that
+the issue is ready for review.
+
+Resolve the project configuration for the specific issue before changing it;
+never assume a project number, field ID, or option ID:
+
+```sh
+gh project list --owner <project-owner> --limit 100
+gh project item-list <project-number> --owner <project-owner> --limit 100 --format json
+gh project field-list <project-number> --owner <project-owner> --format json
+```
+
+Select only the project item that contains the issue URL. Confirm that its
+single-select workflow field is named `Status` and that it has an option named
+exactly `In review`. If the item, field, or option cannot be resolved, stop and
+report the configuration problem rather than guessing.
+
+When the prerequisites and configuration checks succeed, update the item:
+
+```sh
+gh project item-edit <project-number> --owner <project-owner> \
+  --url <issue-url> --field Status --value 'In review'
+```
+
+Verify the update by running `gh project item-list` again with `--field Status`
+and confirming that the matching issue now reports `In review`. If the command
+or verification fails, report the failure and do not claim the issue is ready
+for review.
+
 ## Task tracking
 
 Use GitHub Issues for task tracking; do not use Linear. Create or identify the
