@@ -62,8 +62,16 @@ pnpm test:integration # migrate and run PostgreSQL repository integration tests 
 pnpm test:e2e # run the Playwright browser scoring smoke test
 pnpm lint    # lint all JavaScript and TypeScript files
 pnpm db:migrate # apply forward-only PostgreSQL migrations (requires DATABASE_URL)
+pnpm db:migration:create -- <name> # create a UTC-timestamped SQL migration
 pnpm db:verify # verify PostgreSQL integrity constraints (requires DATABASE_URL)
 ```
+
+Migration filenames use node-pg-migrate's UTC format:
+`YYYYMMDDHHmmssSSS_description.sql`. Always create migrations with
+`pnpm db:migration:create -- <name>`; `pnpm db:migrate` validates every filename
+before connecting to PostgreSQL. The runner also preserves the applied status of
+the repository's original 14-digit migration names when upgrading an existing
+database.
 
 ## Coverage
 
